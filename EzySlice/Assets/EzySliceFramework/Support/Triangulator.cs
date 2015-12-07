@@ -5,6 +5,8 @@ using System.Collections.Generic;
 namespace EzySlice {
     public class Triangulator {
 
+        private static List<Vector3> tmpList = new List<Vector3>();
+
         /*
          * Triangulates the points returned by NDPlane used to slice a single 3D triangle.
          * This function will expect a maximum of 4 points in hullPoints. If the count is greater
@@ -205,6 +207,103 @@ namespace EzySlice {
             }
 
             return totalCount;
+        }
+
+        /*
+         * This will triangulate a set of 3D points using a Convex Algorithm. This function
+         * assumes that the 3D points lie on the same common plane. The function will perform a 3D->2D
+         * mapping and run through A Convex Hull Algorithm (Andrews Algorithm) and then finally
+         * triangulate the points.
+         */
+        public static void TriangulateHullPt(ref List<Vector3> vertices, ref List<int> indicesOut, int startIndex = 0) {
+            int count = vertices.Count;
+
+            if (count < 3) {
+                return;
+            }
+
+            // work out the surface normal. All points are assumed to lie on the same surface
+            Vector3 normal = Vector3.Cross(vertices[1] - vertices[0], vertices[2] - vertices[0]);
+
+            // first, we map from 3D points into a 2D plane represented by the provided normal
+            Vector3 r = Mathf.Abs(normal.x) > Mathf.Abs(normal.y) ? r = new Vector3(0, 1, 0) : r = new Vector3(1, 0, 0);
+
+            Vector3 v = Vector3.Normalize(Vector3.Cross(r, normal));
+            Vector3 u = Vector3.Cross(normal, v);
+
+            // perform a sort. We need to perform a 3D->2D mapping and sort on the virtual plane
+            vertices.Sort((a, b) =>
+            {
+                Vector2 x = new Vector2(Vector3.Dot(a, u), Vector3.Dot(a, v));
+                Vector2 p = new Vector2(Vector3.Dot(b, u), Vector3.Dot(b, v));
+
+                return (x.x < p.x || (x.x == p.x && x.y < p.y)) ? -1 : 1;
+            });
+
+            int k = 0;
+
+            tmpList.Clear();
+
+            /*
+            * Build the lower HULL
+            */
+            for (int i = 0; i < count; i++) {
+                while (k >= 2) {
+                    Vector3 triAreaA = tmpList[k - 2];
+                    Vector3 triAreaB = tmpList[k - 1];
+                    Vector3 triAreaC = vertices[i];
+
+                    Vector2 mA = new Vector2(Vector3.Dot(triAreaA, u), Vector3.Dot(triAreaA, v));
+                    Vector2 mB = new Vector2(Vector3.Dot(triAreaB, u), Vector3.Dot(triAreaB, v));
+                    Vector2 mC = new Vector2(Vector3.Dot(triAreaC, u), Vector3.Dot(triAreaC, v));
+
+                    if (TriArea2D(ref mA.x, ref mA.y, ref mB.x, ref mB.y, ref mC.x, ref mC.y) > 0.0f) {
+                        break;
+                    }
+
+                    k--;
+                }
+
+                tmpList.Insert(k++, vertices[i]);
+            }
+
+            /*
+             * Build the upper HULL
+             */
+            for (int i = count - 2, t = k + 1; i >= 0; i--) {
+                while (k >= t) {
+                    Vector3 triAreaA = tmpList[k - 2];
+                    Vector3 triAreaB = tmpList[k - 1];
+                    Vector3 triAreaC = vertices[i];
+
+                    Vector2 mA = new Vector2(Vector3.Dot(triAreaA, u), Vector3.Dot(triAreaA, v));
+                    Vector2 mB = new Vector2(Vector3.Dot(triAreaB, u), Vector3.Dot(triAreaB, v));
+                    Vector2 mC = new Vector2(Vector3.Dot(triAreaC, u), Vector3.Dot(triAreaC, v));
+
+                    if (TriArea2D(ref mA.x, ref mA.y, ref mB.x, ref mB.y, ref mC.x, ref mC.y) > 0.0f) {
+                        break;
+                    }
+
+                    k--;
+                }
+
+                tmpList.Insert(k++, vertices[i]);
+            }
+
+            vertices.Clear();
+
+            for (int i = 0; i < k - 1; i++) {
+                vertices.Add(tmpList[i]);
+            }
+
+            // perform the final triangulation
+            int triCount = vertices.Count - 1;
+
+            for (int i = 1; i < triCount; i++) {
+                indicesOut.Add(startIndex);
+                indicesOut.Add(startIndex + i);
+                indicesOut.Add(startIndex + i + 1);
+            }
         }
     }
 }

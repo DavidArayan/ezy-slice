@@ -16,16 +16,6 @@ public class Test : MonoBehaviour {
 
     private NDPlane plane = new NDPlane();
 
-	// Use this for initialization
-	void Start () {
-
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
-
     void OnDrawGizmos() {
         if (nd == null) {
             return;
