@@ -67,21 +67,11 @@ namespace EzySlice {
          * indices linking back to the original hullPoints to form a triangle will
          * be added in triangles
          */
-        public static void TriangulateNDSlice(List<Vector3> hullPoints, List<int> triangles) {
+        public static void TriangulateNDSlice(List<Vector3> hullPoints, List<int> triangles, int startIndex = 0) {
             int count = hullPoints.Count;
 
             // do nothing if there are less than 3 vertices. We need minimum of 3 to triangluate
-            if (count < 3) {
-                return;
-            }
-
-            // we need to filter this special case
-            if (count > 4) {
-                count = FilterCommonVertices(hullPoints, 0, count);
-            }
-
-            // filtering has failed, return without processing
-            if (count > 4) {
+            if (count < 3 || count > 4) {
                 return;
             }
 
@@ -92,16 +82,16 @@ namespace EzySlice {
                 Vector3 a = hullPoints[0];
 
                 if (SignedSquare(ref a, ref b, ref c) >= 0.0f) {
-                    triangles.Add(0);
-                    triangles.Add(1);
-                    triangles.Add(2);
+                    triangles.Add(startIndex + 0);
+                    triangles.Add(startIndex + 1);
+                    triangles.Add(startIndex + 2);
 
                     return;
                 }
 
-                triangles.Add(0);
-                triangles.Add(2);
-                triangles.Add(1);
+                triangles.Add(startIndex + 0);
+                triangles.Add(startIndex + 2);
+                triangles.Add(startIndex + 1);
 
                 return;
             }
@@ -122,27 +112,27 @@ namespace EzySlice {
 
                 // add the first triangle
                 if (SignedSquare(ref a, ref b, ref c) >= 0.0f) {
-                    triangles.Add(0);
-                    triangles.Add(1);
-                    triangles.Add(2);
+                    triangles.Add(startIndex + 0);
+                    triangles.Add(startIndex + 1);
+                    triangles.Add(startIndex + 2);
                 }
                 else {
-                    triangles.Add(0);
-                    triangles.Add(2);
-                    triangles.Add(1);
+                    triangles.Add(startIndex + 0);
+                    triangles.Add(startIndex + 2);
+                    triangles.Add(startIndex + 1);
                 }
 
                 // if true, form another triangle b-c-d and exit
                 if (bu < 0.0f && bv > 0.0f && bw > 0.0f) {
                     if (SignedSquare(ref b, ref c, ref d) >= 0.0f) {
-                        triangles.Add(1);
-                        triangles.Add(2);
-                        triangles.Add(3);
+                        triangles.Add(startIndex + 1);
+                        triangles.Add(startIndex + 2);
+                        triangles.Add(startIndex + 3);
                     } 
                     else {
-                        triangles.Add(1);
-                        triangles.Add(3);
-                        triangles.Add(2);
+                        triangles.Add(startIndex + 1);
+                        triangles.Add(startIndex + 3);
+                        triangles.Add(startIndex + 2);
                     }
 
                     return;
@@ -151,14 +141,14 @@ namespace EzySlice {
                 // if true, form another triangle b-a-d and exit
                 if (bu > 0.0f && bv > 0.0f && bw < 0.0f) {
                     if (SignedSquare(ref b, ref a, ref d) >= 0.0f) {
-                        triangles.Add(1);
-                        triangles.Add(0);
-                        triangles.Add(3);
+                        triangles.Add(startIndex + 1);
+                        triangles.Add(startIndex + 0);
+                        triangles.Add(startIndex + 3);
                     } 
                     else {
-                        triangles.Add(1);
-                        triangles.Add(3);
-                        triangles.Add(0);
+                        triangles.Add(startIndex + 1);
+                        triangles.Add(startIndex + 3);
+                        triangles.Add(startIndex + 0);
                     }
 
                     return;
@@ -167,14 +157,14 @@ namespace EzySlice {
                 // if true, form another triangle a-c-d and exit
                 if (bu > 0.0f && bv < 0.0f && bw > 0.0f) {
                     if (SignedSquare(ref a, ref c, ref d) >= 0.0f) {
-                        triangles.Add(0);
-                        triangles.Add(2);
-                        triangles.Add(3);
+                        triangles.Add(startIndex + 0);
+                        triangles.Add(startIndex + 2);
+                        triangles.Add(startIndex + 3);
                     } 
                     else {
-                        triangles.Add(0);
-                        triangles.Add(3);
-                        triangles.Add(2);
+                        triangles.Add(startIndex + 0);
+                        triangles.Add(startIndex + 3);
+                        triangles.Add(startIndex + 2);
                     }
 
                     return;
@@ -280,17 +270,12 @@ namespace EzySlice {
          * mapping and run through A Convex Hull Algorithm (Andrews Algorithm) and then finally
          * triangulate the points.
          */
-        public static void TriangulateHullPt(List<Vector3> vertices, List<Vector3> verticesOut, List<int> indicesOut, List<Vector2> uvOut, List<Vector3> normalOut, int startIndex = 0) {
+        public static void TriangulateHullPt(List<Vector3> vertices, List<Vector3> verticesOut, List<int> indicesOut, List<Vector2> uvOut, Vector3 normal, int startIndex = 0) {
             int count = vertices.Count;
 
             if (count < 3) {
                 return;
             }
-
-            // work out the surface normal. All points are assumed to lie on the same surface
-            Vector3 normal = Vector3.Cross(vertices[1] - vertices[0], vertices[2] - vertices[0]);
-
-            normal.Normalize();
 
             // first, we map from 3D points into a 2D plane represented by the provided normal
             Vector3 r = Mathf.Abs(normal.x) > Mathf.Abs(normal.y) ? r = new Vector3(0, 1, 0) : r = new Vector3(1, 0, 0);
@@ -363,7 +348,6 @@ namespace EzySlice {
                 V3M vecToAdd = tmpList[i];
 
                 verticesOut.Add(vecToAdd.original);
-                normalOut.Add(normal);
                 uvOut.Add(vecToAdd.GenerateUVMap());
             }
 

@@ -24,7 +24,6 @@ public class HullTest : MonoBehaviour {
         List<int> indices = new List<int>();
         List<Vector2> uv = new List<Vector2>();
         List<Vector3> pointsOut = new List<Vector3>();
-        List<Vector3> normalOut = new List<Vector3>();
 
         foreach (GameObject obj in pts) {
             if (obj == null) {
@@ -42,7 +41,7 @@ public class HullTest : MonoBehaviour {
             }
         }
 
-        Triangulator.TriangulateHullPt(points, pointsOut, indices, uv, normalOut);
+        Triangulator.TriangulateHullPt(points, pointsOut, indices, uv, Vector3.zero);
 
         if (drawPoints) {
             Gizmos.color = Color.blue;
