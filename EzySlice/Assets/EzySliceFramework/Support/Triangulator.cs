@@ -186,6 +186,20 @@ namespace EzySlice {
         }
 
         /*
+         * Generates a new UV coordinate for Point pt from a given Triangle of triA-triB-triC and 
+         * its respective UV Coordinates of uvA-uvB-uvC
+         */
+        public static Vector2 GenerateUVCoords(ref Vector3 triA, ref Vector3 triB, ref Vector3 triC, ref Vector2 uvA, ref Vector2 uvB, ref Vector2 uvC, ref Vector3 pt) {
+            float u = 0.0f;
+            float v = 0.0f;
+            float w = 0.0f;
+
+            Barycentric(ref triA, ref triB, ref triC, ref pt, ref u, ref v, ref w);
+
+            return (u * uvA) + (v * uvB) + (w * uvC);
+        }
+
+        /*
          * This function will recursively filter the vertices from provided index up to end index
          */
         public static int FilterCommonVertices(List<Vector3> vec, int startIndex, int endIndex) {
@@ -215,7 +229,7 @@ namespace EzySlice {
          * mapping and run through A Convex Hull Algorithm (Andrews Algorithm) and then finally
          * triangulate the points.
          */
-        public static void TriangulateHullPt(ref List<Vector3> vertices, ref List<int> indicesOut, int startIndex = 0) {
+        public static void TriangulateHullPt(List<Vector3> vertices, List<Vector3> verticesOut, List<int> indicesOut, List<Vector2> uvOut, List<Vector3> normalOut, int startIndex = 0) {
             int count = vertices.Count;
 
             if (count < 3) {
@@ -224,6 +238,8 @@ namespace EzySlice {
 
             // work out the surface normal. All points are assumed to lie on the same surface
             Vector3 normal = Vector3.Cross(vertices[1] - vertices[0], vertices[2] - vertices[0]);
+
+            normal.Normalize();
 
             // first, we map from 3D points into a 2D plane represented by the provided normal
             Vector3 r = Mathf.Abs(normal.x) > Mathf.Abs(normal.y) ? r = new Vector3(0, 1, 0) : r = new Vector3(1, 0, 0);
@@ -290,14 +306,21 @@ namespace EzySlice {
                 tmpList.Insert(k++, vertices[i]);
             }
 
-            vertices.Clear();
-
             for (int i = 0; i < k - 1; i++) {
-                vertices.Add(tmpList[i]);
+                Vector3 vecToAdd = tmpList[i];
+
+                Vector2 mA = new Vector2(Vector3.Dot(vecToAdd, u), Vector3.Dot(vecToAdd, v));
+
+                float divX = mA.x > 1.0f ? mA.x + 0.5f : 1.5f;
+                float divY = mA.y > 1.0f ? mA.y + 0.5f : 1.5f;
+
+                verticesOut.Add(vecToAdd);
+                normalOut.Add(normal);
+                uvOut.Add(new Vector2(mA.x / divX - 0.5f, mA.y / divY - 0.5f));
             }
 
             // perform the final triangulation
-            int triCount = vertices.Count - 1;
+            int triCount = verticesOut.Count - 1;
 
             for (int i = 1; i < triCount; i++) {
                 indicesOut.Add(startIndex);

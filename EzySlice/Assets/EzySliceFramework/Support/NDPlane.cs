@@ -137,6 +137,49 @@ namespace EzySlice {
             return true;
         }
 
+        /*
+         * Intersect the triangle composed of points a-b-c and store potential intersection
+         * points in List fptr.
+         * This function will also generate relevant UV Coordinates of the intersection points
+         * NOTE: List fpts will not be cleared, previous points in the list will remain.
+         */
+        public bool IntersectTriangle(ref Vector3 a, ref Vector3 b, ref Vector3 c, ref Vector2 uvA, ref Vector2 uvB, ref Vector2 uvC, List<Vector3> fpts, List<Vector2> fptsUV) {
+            if (SideOfPlane(ref a) && SideOfPlane(ref b) && SideOfPlane(ref c)) {
+                return false;
+            }
+
+            Vector3 intersectionPt1 = Vector3.zero;
+            Vector3 intersectionPt2 = Vector3.zero;
+            Vector3 intersectionPt3 = Vector3.zero;
+
+            // test segment a-b
+            if (IntersectLine(ref a, ref b, ref intersectionPt1)) {
+                fpts.Add(intersectionPt1);
+
+                fptsUV.Add(Triangulator.GenerateUVCoords(ref a, ref b, ref c, ref uvA, ref uvB, ref uvC, ref intersectionPt1));
+            }
+
+            // test segment a-c
+            if (IntersectLine(ref a, ref c, ref intersectionPt2)) {
+                // don't add the same intersection point
+                if ((intersectionPt1 - intersectionPt2).sqrMagnitude > 0F) {
+                    fpts.Add(intersectionPt2);
+                    fptsUV.Add(Triangulator.GenerateUVCoords(ref a, ref b, ref c, ref uvA, ref uvB, ref uvC, ref intersectionPt2));
+                }
+            }
+
+            // test segment b-c
+            if (IntersectLine(ref b, ref c, ref intersectionPt3)) {
+                // don't add the same intersection point
+                if ((intersectionPt1 - intersectionPt3).sqrMagnitude > 0F && (intersectionPt2 - intersectionPt3).sqrMagnitude > 0F) {
+                    fpts.Add(intersectionPt3);
+                    fptsUV.Add(Triangulator.GenerateUVCoords(ref a, ref b, ref c, ref uvA, ref uvB, ref uvC, ref intersectionPt3));
+                }
+            }
+
+            return true;
+        }
+
         public void IntersectTriangle(Vector3 a, Vector3 b, Vector3 c, List<Vector3> fpts) {
             IntersectTriangle(ref a, ref b, ref c, fpts);
         }
@@ -150,7 +193,13 @@ namespace EzySlice {
          * This function is useful for generating hulls between cuts of the ND plane, as the upper and lower hulls
          * will belong to different GameObjects
          */
-        public void IntersectTriangleHull(ref Vector3 a, ref Vector3 b, ref Vector3 c, List<Vector3> lower, List<Vector3> upper, List<Vector3> fpts) {
+        public void IntersectTriangleHull(ref Vector3 a, 
+                                          ref Vector3 b, 
+                                          ref Vector3 c, 
+                                          List<Vector3> lower, 
+                                          List<Vector3> upper, 
+                                          List<Vector3> fpts) 
+        {
             // quick test, if no intersection, just do a lower/upper addition
             if (!IntersectTriangle(ref a, ref b, ref c, fpts)) {
                 if (SideOfPlane(ref a)) {
@@ -182,8 +231,95 @@ namespace EzySlice {
             }
         }
 
+        /*
+         * Performs an intersection on the triangle composed of points a-b-c. This function will store all points and
+         * relevant intersection points in the lower and upper Lists. An addition is that this function
+         * will also generate relevant UV Coordinates of all the cut points. NOTE: Lists will not be cleared in this function
+         * lower - Any point (if any) that fall below the NDPlane
+         * lowerUV - Any point (if any) that fall below the NDPlane, This generates UV Coordinates
+         * upper - Any point (if any) that fall above the NDPlane
+         * upperUV - Any point (if any) that fall above the NDPlane, This generates UV Coordinares
+         * fpts - The intersection points. This is shared between lower and upper hulls
+         * fpts - The intersection points UV Coordinates. This is shared between lower and upper hulls
+         * This function is useful for generating hulls between cuts of the ND plane, as the upper and lower hulls
+         * will belong to different GameObjects
+         */
+        public void IntersectTriangleHull(ref Vector3 a,
+                                          ref Vector3 b,
+                                          ref Vector3 c,
+                                          ref Vector2 uvA,
+                                          ref Vector2 uvB,
+                                          ref Vector2 uvC,
+                                          List<Vector3> lower,
+                                          List<Vector2> lowerUV,
+                                          List<Vector3> upper,
+                                          List<Vector2> upperUV,
+                                          List<Vector3> fpts,
+                                          List<Vector2> fptsUV) 
+        {
+            // quick test, if no intersection, just do a lower/upper addition
+            if (!IntersectTriangle(ref a, ref b, ref c, ref uvA, ref uvB, ref uvC, fpts, fptsUV)) {
+                if (SideOfPlane(ref a)) {
+                    lower.Add(a);
+                    lower.Add(b);
+                    lower.Add(c);
+                    lowerUV.Add(uvA);
+                    lowerUV.Add(uvB);
+                    lowerUV.Add(uvC);
+                } else {
+                    upper.Add(a);
+                    upper.Add(b);
+                    upper.Add(c);
+                    upper.Add(uvA);
+                    upper.Add(uvB);
+                    upper.Add(uvC);
+                }
+
+                return;
+            }
+
+            // if passed, the intersection points will be in fpts
+            // perform a simple filter process to remove duplicate vertices
+            if (!Contains(fpts, ref a)) {
+                if (SideOfPlane(ref a)) {
+                    lower.Add(a);
+                    lowerUV.Add(uvA);
+                } 
+                else {
+                    upper.Add(a);
+                    upperUV.Add(uvA);
+                }
+            }
+
+            if (!Contains(fpts, ref b)) {
+                if (SideOfPlane(ref b)) {
+                    lower.Add(b);
+                    lowerUV.Add(uvB);
+                }
+                else {
+                    upper.Add(b);
+                    upperUV.Add(uvB);
+                }
+            }
+
+            if (!Contains(fpts, ref c)) {
+                if (SideOfPlane(ref c)) {
+                    lower.Add(c);
+                    lowerUV.Add(uvC);
+                } 
+                else {
+                    upper.Add(c);
+                    upperUV.Add(uvC);
+                }
+            }
+        }
+
         public void IntersectTriangleHull(Vector3 a, Vector3 b, Vector3 c, List<Vector3> lower, List<Vector3> upper, List<Vector3> fpts) {
             IntersectTriangleHull(ref a, ref b, ref c, lower, upper, fpts);
+        }
+
+        public void IntersectTriangleHull(Vector3 a, Vector3 b, Vector3 c, Vector2 uvA, Vector2 uvB, Vector2 uvC, List<Vector3> lower, List<Vector2> lowerUV, List<Vector3> upper, List<Vector2> upperUV, List<Vector3> fpts, List<Vector2> fptsUV) {
+            IntersectTriangleHull(ref a, ref b, ref c, ref uvA, ref uvB, ref uvC, lower, lowerUV, upper, upperUV, fpts, fptsUV);
         }
 
         /*

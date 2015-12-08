@@ -22,6 +22,9 @@ public class HullTest : MonoBehaviour {
 
         List<Vector3> points = new List<Vector3>();
         List<int> indices = new List<int>();
+        List<Vector2> uv = new List<Vector2>();
+        List<Vector3> pointsOut = new List<Vector3>();
+        List<Vector3> normalOut = new List<Vector3>();
 
         foreach (GameObject obj in pts) {
             if (obj == null) {
@@ -39,12 +42,12 @@ public class HullTest : MonoBehaviour {
             }
         }
 
-        Triangulator.TriangulateHullPt(ref points, ref indices);
+        Triangulator.TriangulateHullPt(points, pointsOut, indices, uv, normalOut);
 
         if (drawPoints) {
             Gizmos.color = Color.blue;
 
-            foreach (Vector3 point in points) {
+            foreach (Vector3 point in pointsOut) {
                 Gizmos.DrawWireCube(point, Vector3.one / 2.0f);
             }
         }
@@ -53,9 +56,9 @@ public class HullTest : MonoBehaviour {
             Gizmos.color = Color.green;
 
             for (int i = 0; i < indices.Count; i += 3) {
-                Gizmos.DrawLine(points[indices[i]], points[indices[i + 1]]);
-                Gizmos.DrawLine(points[indices[i + 1]], points[indices[i + 2]]);
-                Gizmos.DrawLine(points[indices[i + 2]], points[indices[i]]);
+                Gizmos.DrawLine(pointsOut[indices[i]], pointsOut[indices[i + 1]]);
+                Gizmos.DrawLine(pointsOut[indices[i + 1]], pointsOut[indices[i + 2]]);
+                Gizmos.DrawLine(pointsOut[indices[i + 2]], pointsOut[indices[i]]);
             }
         }
     }
