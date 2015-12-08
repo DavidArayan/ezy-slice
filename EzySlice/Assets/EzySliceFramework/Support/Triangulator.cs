@@ -5,7 +5,58 @@ using System.Collections.Generic;
 namespace EzySlice {
     public class Triangulator {
 
-        private static List<Vector3> tmpList = new List<Vector3>();
+        private static List<V3M> tmpList = new List<V3M>();
+        private static List<V3M> tmpVertices = new List<V3M>();
+
+        internal class V3M {
+            private static List<V3M> _V3MPOOL = new List<V3M>();
+            private static int stackIndex = 0;
+
+            private static float divX = 1.0f;
+            private static float divY = 1.0f;
+
+            public Vector3 original;
+            public Vector2 mapped;
+
+            public V3M() {
+                _V3MPOOL.Add(this);
+                stackIndex++;
+            }
+
+            public V3M Set(ref Vector3 newOriginal, ref Vector3 u, ref Vector3 v) {
+                this.original = newOriginal;
+                this.mapped = new Vector2(Vector3.Dot(newOriginal, u), Vector3.Dot(newOriginal, v));
+
+                if (mapped.x > divX) {
+                    divX = mapped.x;
+                }
+
+                if (mapped.y > divY) {
+                    divY = mapped.y;
+                }
+
+                return this;
+            }
+
+            public static void ClearUVFlags() {
+                divX = 1.0f;
+                divY = 1.0f;
+
+                stackIndex = 0;
+            }
+
+            public static V3M Get() {
+                if (_V3MPOOL.Count <= stackIndex) {
+                    return new V3M();
+                }
+
+                return _V3MPOOL[stackIndex++];
+            }
+
+            public Vector2 GenerateUVMap() {
+                return new Vector2((mapped.x / divX + 0.5f) - 0.5f, (mapped.y / divY + 0.5f) - 0.5f);
+            }
+        }
 
         /*
          * Triangulates the points returned by NDPlane used to slice a single 3D triangle.
@@ -247,11 +298,21 @@ namespace EzySlice {
             Vector3 v = Vector3.Normalize(Vector3.Cross(r, normal));
             Vector3 u = Vector3.Cross(normal, v);
 
+            V3M.ClearUVFlags();
+
+            tmpVertices.Clear();
+
+            for (int i = 0; i < count; i++) {
+                Vector3 vertToAdd = vertices[i];
+
+                tmpVertices.Add(V3M.Get().Set(ref vertToAdd, ref u, ref v));
+            }
+
             // perform a sort. We need to perform a 3D->2D mapping and sort on the virtual plane
-            vertices.Sort((a, b) =>
+            tmpVertices.Sort((a, b) =>
             {
-                Vector2 x = new Vector2(Vector3.Dot(a, u), Vector3.Dot(a, v));
-                Vector2 p = new Vector2(Vector3.Dot(b, u), Vector3.Dot(b, v));
+                Vector2 x = a.mapped;
+                Vector2 p = b.mapped;
 
                 return (x.x < p.x || (x.x == p.x && x.y < p.y)) ? -1 : 1;
             });
@@ -265,13 +326,9 @@ namespace EzySlice {
             */
             for (int i = 0; i < count; i++) {
                 while (k >= 2) {
-                    Vector3 triAreaA = tmpList[k - 2];
-                    Vector3 triAreaB = tmpList[k - 1];
-                    Vector3 triAreaC = vertices[i];
-
-                    Vector2 mA = new Vector2(Vector3.Dot(triAreaA, u), Vector3.Dot(triAreaA, v));
-                    Vector2 mB = new Vector2(Vector3.Dot(triAreaB, u), Vector3.Dot(triAreaB, v));
-                    Vector2 mC = new Vector2(Vector3.Dot(triAreaC, u), Vector3.Dot(triAreaC, v));
+                    Vector2 mA = tmpList[k - 2].mapped;
+                    Vector2 mB = tmpList[k - 1].mapped;
+                    Vector2 mC = tmpVertices[i].mapped;
 
                     if (TriArea2D(ref mA.x, ref mA.y, ref mB.x, ref mB.y, ref mC.x, ref mC.y) > 0.0f) {
                         break;
@@ -280,7 +337,7 @@ namespace EzySlice {
                     k--;
                 }
 
-                tmpList.Insert(k++, vertices[i]);
+                tmpList.Insert(k++, tmpVertices[i]);
             }
 
             /*
@@ -288,13 +345,9 @@ namespace EzySlice {
              */
             for (int i = count - 2, t = k + 1; i >= 0; i--) {
                 while (k >= t) {
-                    Vector3 triAreaA = tmpList[k - 2];
-                    Vector3 triAreaB = tmpList[k - 1];
-                    Vector3 triAreaC = vertices[i];
-
-                    Vector2 mA = new Vector2(Vector3.Dot(triAreaA, u), Vector3.Dot(triAreaA, v));
-                    Vector2 mB = new Vector2(Vector3.Dot(triAreaB, u), Vector3.Dot(triAreaB, v));
-                    Vector2 mC = new Vector2(Vector3.Dot(triAreaC, u), Vector3.Dot(triAreaC, v));
+                    Vector2 mA = tmpList[k - 2].mapped;
+                    Vector2 mB = tmpList[k - 1].mapped;
+                    Vector2 mC = tmpVertices[i].mapped;
 
                     if (TriArea2D(ref mA.x, ref mA.y, ref mB.x, ref mB.y, ref mC.x, ref mC.y) > 0.0f) {
                         break;
@@ -303,20 +356,15 @@ namespace EzySlice {
                     k--;
                 }
 
-                tmpList.Insert(k++, vertices[i]);
+                tmpList.Insert(k++, tmpVertices[i]);
             }
 
             for (int i = 0; i < k - 1; i++) {
-                Vector3 vecToAdd = tmpList[i];
+                V3M vecToAdd = tmpList[i];
 
-                Vector2 mA = new Vector2(Vector3.Dot(vecToAdd, u), Vector3.Dot(vecToAdd, v));
-
-                float divX = mA.x > 1.0f ? mA.x + 0.5f : 1.5f;
-                float divY = mA.y > 1.0f ? mA.y + 0.5f : 1.5f;
-
-                verticesOut.Add(vecToAdd);
+                verticesOut.Add(vecToAdd.original);
                 normalOut.Add(normal);
-                uvOut.Add(new Vector2(mA.x / divX - 0.5f, mA.y / divY - 0.5f));
+                uvOut.Add(vecToAdd.GenerateUVMap());
             }
 
             // perform the final triangulation
