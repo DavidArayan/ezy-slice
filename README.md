@@ -20,3 +20,7 @@ The Cross Section Retriangulation (for Convex Objects) uses Andrew's Algorithm w
 The Cutting Algorithm uses Plane to Triangle intersection to cut the individual triangles from the provided Mesh.
 
 The overall system was designed to be as GC (Garbage Collection) friendly as possible. References to variables are used whenever possible.
+
+### About Ezy Frameworks
+
+This project is one of many projects which in total makes up the Ezy Frameworks. These frameworks are designed to work as individual modules (for easy intergration to other projects) or as a combined codebase to make a complete framework or engine. Ezy Frameworks are developed for my own education, knowledge and experimentation for current and future technologies. Ezy Frameworks are Open Source. See Individual Ezy Projects for detailed documentation.
