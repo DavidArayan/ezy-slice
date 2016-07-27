@@ -7,7 +7,7 @@ namespace EzySlice {
         private NDPlane plane = new NDPlane();
 
         public void CutObject(GameObject obj, bool destroyPrevious = false) {
-            plane.ComputePlane(transform.position, transform.forward);
+            plane.ComputePlane(transform.position, transform.up);
 
             MeshSlicer.CutObjectInstantiate(obj, plane, destroyPrevious);
         }
