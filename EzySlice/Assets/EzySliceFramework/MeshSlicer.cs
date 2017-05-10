@@ -36,7 +36,7 @@ namespace EzySlice {
                 newObject.transform.rotation = obj.transform.rotation;
                 newObject.transform.localScale = obj.transform.localScale;
 
-                renderer.materials = obj.GetComponent<MeshRenderer>().materials;
+                renderer.sharedMaterials = obj.GetComponent<MeshRenderer>().sharedMaterials;
 
                 finalObjects.Add(newObject);
             }
