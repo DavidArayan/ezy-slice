@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace EzySlice {
+	public enum SideOfPlane {
+		UP,
+		DOWN,
+		ON
+	}
 	/**
 	 * Represents a simple 3D Plane structure with a position
 	 * and direction which extends infinitely in its axis. This provides
@@ -28,6 +33,23 @@ namespace EzySlice {
 
 		public float dist {
 			get { return this.m_dist; }
+		}
+
+		/**
+		 * Checks which side of the plane the point lays on.
+		 */
+		public SideOfPlane SideOf(Vector3 pt) {
+			float result = Vector3.Dot(m_normal, pt);
+
+			if (result > m_dist) {
+				return SideOfPlane.UP;
+			}
+
+			if (result < m_dist) {
+				return SideOfPlane.DOWN;
+			}
+
+			return SideOfPlane.ON;
 		}
 	}
 }
