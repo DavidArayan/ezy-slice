@@ -11,7 +11,7 @@ namespace EzySlice {
 	 * via an optional indices array. Could lead for a faster
 	 * intersection test aswell.
 	 */
-	public struct IntersectionResult {
+	public class IntersectionResult {
 
 		// general tag to check if this structure is valid
 		private bool is_success;
@@ -26,12 +26,12 @@ namespace EzySlice {
 		private int lower_hull_count;
 		private int intersection_pt_count;
 
-		public IntersectionResult(int maxHulls = 2) {
+		public IntersectionResult() {
 			this.is_success = false;
 
-			this.upper_hull = new Triangle[maxHulls];
-			this.lower_hull = new Triangle[maxHulls];
-			this.intersection_pt = new Vector3[maxHulls];
+			this.upper_hull = new Triangle[2];
+			this.lower_hull = new Triangle[2];
+			this.intersection_pt = new Vector3[2];
 
 			this.upper_hull_count = 0;
 			this.lower_hull_count = 0;
