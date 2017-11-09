@@ -35,5 +35,17 @@ namespace EzySlice {
 
 			return false;
 		}
+
+		/**
+		 * Perform an intersection between Plane and Triangle, storing intersection points in array
+		 * position outPt and Separate Triangles in outTri.
+		 * A Plane is only able to split a triangle into 2 parts, generating 3 triangles and 
+		 * 2 intersection points.
+		 * Results will be filled into the IntersectionResult reference. Check result.isValid()
+		 * for the final results.
+		 */
+		public static void Intersect(Plane pl, Triangle tri, ref IntersectionResult result) {
+			// -> Quick Exit via performing a Plane->Sphere test
+		}
 	}
 }
