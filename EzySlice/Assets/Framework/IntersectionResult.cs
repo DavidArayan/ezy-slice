@@ -62,20 +62,24 @@ namespace EzySlice {
 		 * Used by the intersector, adds a new triangle to the
 		 * upper hull section
 		 */
-		public void AddUpperHull(Triangle tri) {
+		public IntersectionResult AddUpperHull(Triangle tri) {
 			upper_hull[upper_hull_count++] = tri;
 
 			is_success = true;
+
+			return this;
 		}
 
 		/**
 		 * Used by the intersector, adds a new triangle to the
 		 * lower gull section
 		 */
-		public void AddLowerHull(Triangle tri) {
+		public IntersectionResult AddLowerHull(Triangle tri) {
 			lower_hull[lower_hull_count++] = tri;
 
 			is_success = true;
+
+			return this;
 		}
 
 		/**
@@ -86,6 +90,9 @@ namespace EzySlice {
 			intersection_pt[intersection_pt_count++] = pt;
 		}
 
+		/**
+		 * Clear the current state of this object 
+		 */
 		public void Clear() {
 			is_success = false;
 			upper_hull_count = 0;
