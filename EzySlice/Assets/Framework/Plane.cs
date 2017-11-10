@@ -24,14 +24,27 @@ namespace EzySlice {
 		private Vector3 m_normal;
 		private float m_dist;
 
+		// this is for editor debugging only!
+		#if UNITY_EDITOR
+		private Transform trans_ref;
+		#endif
+
 		public Plane(Vector3 pos, Vector3 norm) {
 			this.m_normal = norm;
 			this.m_dist = Vector3.Dot(norm, pos);
+
+			#if UNITY_EDITOR
+			trans_ref = null;
+			#endif
 		}
 
 		public Plane(Vector3 norm, float dot) {
 			this.m_normal = norm;
 			this.m_dist = dot;
+
+			#if UNITY_EDITOR
+			trans_ref = null;
+			#endif
 		}
 
 		public void Compute(Vector3 pos, Vector3 norm) {
@@ -41,6 +54,11 @@ namespace EzySlice {
 
 		public void Compute(Transform trans) {
 			Compute(trans.position, trans.up);
+
+			// this is for editor debugging only!
+			#if UNITY_EDITOR
+			trans_ref = trans;
+			#endif
 		}
 
 		public void Compute(GameObject obj) {
@@ -71,5 +89,35 @@ namespace EzySlice {
 
 			return SideOfPlane.ON;
 		}
+
+		#if UNITY_EDITOR
+
+		/**
+		 * Editor only DEBUG functionality. This should not be compiled in the final
+		 * Version.
+		 */
+		public void OnDebugDraw() {
+			OnDebugDraw(Color.white);
+		}
+
+		public void OnDebugDraw(Color drawColor) {
+			if (trans_ref == null) {
+				return;
+			}
+
+			Color prevColor = Gizmos.color;
+			Matrix4x4 prevMatrix = Gizmos.matrix;
+
+			// TO-DO
+			Gizmos.matrix = Matrix4x4.TRS(trans_ref.position, trans_ref.rotation, trans_ref.localScale);
+			Gizmos.color = drawColor;
+
+			Gizmos.DrawWireCube(Vector3.zero, new Vector3(1.0f, 0.0f, 1.0f));
+
+			Gizmos.color = prevColor;
+			Gizmos.matrix = prevMatrix;
+		}
+
+		#endif
 	}
 }

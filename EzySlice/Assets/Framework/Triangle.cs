@@ -21,6 +21,10 @@ namespace EzySlice {
 
 		public Triangle(Vector3 posa, 
 						Vector3 posb, 
+						Vector3 posc) : this(posa, posb, posc, Vector2.zero, Vector2.zero, Vector2.zero) {}
+
+		public Triangle(Vector3 posa, 
+						Vector3 posb, 
 						Vector3 posc,
 						Vector2 uva, 
 						Vector2 uvb, 
@@ -123,7 +127,7 @@ namespace EzySlice {
 		 * the results inside the IntersectionResult structure.
 		 * Returns true on success or false otherwise
 		 */
-		public bool Split(Plane pl, ref IntersectionResult result) {
+		public bool Split(Plane pl, IntersectionResult result) {
 			Intersector.Intersect(pl, this, ref result);
 
 			return result.isValid;
