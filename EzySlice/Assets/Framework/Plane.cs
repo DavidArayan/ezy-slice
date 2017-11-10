@@ -21,8 +21,8 @@ namespace EzySlice {
 	 * an optimal structure for collision tests for the slicing framework.
 	 */
 	public struct Plane {
-		private readonly Vector3 m_normal;
-		private readonly float m_dist;
+		private Vector3 m_normal;
+		private float m_dist;
 
 		public Plane(Vector3 pos, Vector3 norm) {
 			this.m_normal = norm;
@@ -32,6 +32,19 @@ namespace EzySlice {
 		public Plane(Vector3 norm, float dot) {
 			this.m_normal = norm;
 			this.m_dist = dot;
+		}
+
+		public void Compute(Vector3 pos, Vector3 norm) {
+			this.m_normal = norm;
+			this.m_dist = Vector3.Dot(norm, pos);
+		}
+
+		public void Compute(Transform trans) {
+			Compute(trans.position, trans.up);
+		}
+
+		public void Compute(GameObject obj) {
+			Compute(obj.transform);
 		}
 
 		public Vector3 normal {

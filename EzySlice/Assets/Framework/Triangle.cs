@@ -117,5 +117,40 @@ namespace EzySlice {
 
 			return (weights.x * m_uv_a) + (weights.y * m_uv_b) + (weights.z * m_uv_c);
 		}
+
+		/**
+		 * Helper function to split this triangle by the provided plane and store
+		 * the results inside the IntersectionResult structure.
+		 * Returns true on success or false otherwise
+		 */
+		public bool Split(Plane pl, ref IntersectionResult result) {
+			Intersector.Intersect(pl, this, ref result);
+
+			return result.isValid;
+		}
+
+		#if UNITY_EDITOR
+
+		/**
+		 * Editor only DEBUG functionality. This should not be compiled in the final
+		 * Version.
+		 */
+		public void OnDebugDraw() {
+			OnDebugDraw(Color.white);
+		}
+
+		public void OnDebugDraw(Color drawColor) {
+			Color prevColor = Gizmos.color;
+
+			Gizmos.color = drawColor;
+
+			Gizmos.DrawLine(positionA, positionB);
+			Gizmos.DrawLine(positionB, positionC);
+			Gizmos.DrawLine(positionC, positionA);
+
+			Gizmos.color = prevColor;
+		}
+
+		#endif
 	}
 }

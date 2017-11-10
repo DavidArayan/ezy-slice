@@ -46,12 +46,20 @@ namespace EzySlice {
 			get { return lower_hull; }
 		}
 
+		public Vector3[] intersectionPoints {
+			get { return intersection_pt; }
+		}
+
 		public int upperHullCount {
 			get { return upper_hull_count; }
 		}
 
 		public int lowerHullCount {
 			get { return lower_hull_count; }
+		}
+
+		public int intersectionPointCount {
+			get { return intersection_pt_count; }
 		}
 
 		public bool isValid {
@@ -99,5 +107,44 @@ namespace EzySlice {
 			lower_hull_count = 0;
 			intersection_pt_count = 0;
 		}
+
+		#if UNITY_EDITOR
+
+		/**
+		 * Editor only DEBUG functionality. This should not be compiled in the final
+		 * Version.
+		 */
+		public void OnDebugDraw() {
+			OnDebugDraw(Color.white);
+		}
+
+		public void OnDebugDraw(Color drawColor) {
+			if (!isValid) {
+				return;
+			}
+
+			Color prevColor = Gizmos.color;
+
+			Gizmos.color = drawColor;
+
+			// draw the intersection points
+			for (int i = 0; i < intersectionPointCount; i++) {
+				Gizmos.DrawSphere(intersectionPoints[i], 0.1f);
+			}
+
+			// draw the upper hull in RED
+			for (int i = 0; i < upperHullCount; i++) {
+				upperHull[i].OnDebugDraw(Color.red);
+			}
+
+			// draw the lower hull in BLUE
+			for (int i = 0; i < lowerHullCount; i++) {
+				lowerHull[i].OnDebugDraw(Color.blue);
+			}
+
+			Gizmos.color = prevColor;
+		}
+
+		#endif
 	}
 }
