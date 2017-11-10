@@ -29,6 +29,8 @@ public class IntersectionDebug : MonoBehaviour {
 
 		bool result = newTri.Split(newPlane, newResult);
 
-		newResult.OnDebugDraw(Color.green);
+		if (result) {
+			newResult.OnDebugDraw(Color.green);	
+		}
 	}
 }
