@@ -89,7 +89,7 @@ namespace EzySlice {
 			});
 
 			// our final hull mappings will end up in here
-			Mapped2D[] hulls = new Mapped2D[count];
+			Mapped2D[] hulls = new Mapped2D[count+1];
 
 			int k = 0;
 
