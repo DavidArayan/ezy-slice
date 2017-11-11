@@ -80,8 +80,59 @@ namespace EzySlice {
 				}
 			}
 
+			// start creating our hulls
+			Mesh finalUpperHull = CreateFrom(upperHull);
+			Mesh finalLowerHull = CreateFrom(lowerHull);
+
 			// TMP -> TO/DO -> Function not complete
 			return null;
+		}
+
+		private static Mesh CreateFrom(List<Triangle> hull) {
+			int count = hull.Count;
+
+			if (count <= 0) {
+				return null;
+			}
+
+			Mesh newMesh = new Mesh();
+
+			Vector3[] newVertices = new Vector3[count * 3];
+			Vector2[] newUvs = new Vector2[count * 3];
+			int[] newIndices = new int[count * 3];
+
+			int addedCount = 0;
+
+			// fill our mesh arrays
+			for (int i = 0; i < count; i++) {
+				Triangle newTri = hull[i];
+
+				int i0 = i + addedCount + 0;
+				int i1 = i + addedCount + 1;
+				int i2 = i + addedCount + 2;
+
+				newVertices[i0] = newTri.positionA;
+				newVertices[i1] = newTri.positionB;
+				newVertices[i2] = newTri.positionC;
+
+				newUvs[i0] = newTri.uvA;
+				newUvs[i1] = newTri.uvB;
+				newUvs[i2] = newTri.uvC;
+
+				newIndices[i0] = i0;
+				newIndices[i1] = i1;
+				newIndices[i2] = i2;
+			}
+
+			// fill the mesh structure
+			newMesh.vertices = newVertices;
+			newMesh.uv = newUvs;
+			newMesh.triangles = newIndices;
+
+			// consider computing this array externally instead
+			newMesh.RecalculateNormals();
+
+			return newMesh;
 		}
 	}
 }
