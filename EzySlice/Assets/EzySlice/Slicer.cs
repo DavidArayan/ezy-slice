@@ -6,6 +6,72 @@ namespace EzySlice {
 	public sealed class Slicer {
 
 		/**
+		 * Helper function which will slice the provided object with the provided plane
+		 * and instantiate and return the final GameObjects
+		 * 
+		 * This function will return null if the object failed to slice
+		 */
+		public static GameObject[] SliceInstantiate(GameObject obj, Plane pl) {
+			SlicedHull slice = Slice(obj, pl);
+
+			if (slice == null) {
+				return null;
+			}
+
+			GameObject upperHull = slice.CreateUpperHull();
+
+			if (upperHull != null) {
+				// set the positional information
+				upperHull.transform.position = obj.transform.position;
+				upperHull.transform.rotation = obj.transform.rotation;
+				upperHull.transform.localScale = obj.transform.localScale;
+
+				// the the material information
+				upperHull.GetComponent<Renderer>().sharedMaterials = obj.GetComponent<MeshRenderer>().sharedMaterials;
+			}
+
+			GameObject lowerHull = slice.CreateLowerHull();
+
+			if (lowerHull != null) {
+				// set the positional information
+				lowerHull.transform.position = obj.transform.position;
+				lowerHull.transform.rotation = obj.transform.rotation;
+				lowerHull.transform.localScale = obj.transform.localScale;
+
+				// the the material information
+				lowerHull.GetComponent<Renderer>().sharedMaterials = obj.GetComponent<MeshRenderer>().sharedMaterials;
+			}
+
+			// return both if upper and lower hulls were generated
+			if (upperHull != null && lowerHull != null) {
+				return new GameObject[] {upperHull, lowerHull};
+			}
+
+			// otherwise return only the upper hull
+			if (upperHull != null) {
+				return new GameObject[] {upperHull};
+			}
+
+			// otherwise return null
+			return null;
+		}
+
+		/**
+		 * Helper function to accept a gameobject which will transform the plane
+		 * approprietly before the slice occurs
+		 * See -> Slice(Mesh, Plane) for more info
+		 */
+		public static SlicedHull Slice(GameObject obj, Plane pl) {
+			MeshFilter renderer = obj.GetComponent<MeshFilter>();
+
+			if (renderer == null) {
+				return null;
+			}
+
+			return Slice(renderer.sharedMesh, pl);
+		}
+
+		/**
 		 * Slice the gameobject mesh (if any) using the Plane, which will generate
 		 * a maximum of 2 other Meshes.
 		 * This function will recalculate new UV coordinates to ensure textures are applied
@@ -13,15 +79,7 @@ namespace EzySlice {
 		 * Returns null if no intersection has been found or the GameObject does not contain
 		 * a valid mesh to cut.
 		 */
-		public static Mesh[] Slice(GameObject obj, Plane pl) {
-			MeshFilter renderer = obj.GetComponent<MeshFilter>();
-
-			if (renderer == null) {
-				return null;
-			}
-
-			Mesh sharedMesh = renderer.sharedMesh;
-
+		public static SlicedHull Slice(Mesh sharedMesh, Plane pl) {
 			if (sharedMesh == null) {
 				return null;
 			}
@@ -84,10 +142,12 @@ namespace EzySlice {
 			Mesh finalUpperHull = CreateFrom(upperHull);
 			Mesh finalLowerHull = CreateFrom(lowerHull);
 
-			// TMP -> TO/DO -> Function not complete
-			return null;
+			return new SlicedHull(finalUpperHull, finalLowerHull);
 		}
 
+		/**
+		 * Generate a mesh from the provided hull made of triangles
+		 */
 		private static Mesh CreateFrom(List<Triangle> hull) {
 			int count = hull.Count;
 
@@ -107,9 +167,9 @@ namespace EzySlice {
 			for (int i = 0; i < count; i++) {
 				Triangle newTri = hull[i];
 
-				int i0 = i + addedCount + 0;
-				int i1 = i + addedCount + 1;
-				int i2 = i + addedCount + 2;
+				int i0 = addedCount + 0;
+				int i1 = addedCount + 1;
+				int i2 = addedCount + 2;
 
 				newVertices[i0] = newTri.positionA;
 				newVertices[i1] = newTri.positionB;
@@ -122,6 +182,8 @@ namespace EzySlice {
 				newIndices[i0] = i0;
 				newIndices[i1] = i1;
 				newIndices[i2] = i2;
+
+				addedCount += 3;
 			}
 
 			// fill the mesh structure
