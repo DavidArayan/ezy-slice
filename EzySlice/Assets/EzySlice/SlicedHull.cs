@@ -23,6 +23,25 @@ namespace EzySlice {
 			this.lower_cross_section = lowerCrossSection;
 		}
 
+		public GameObject CreateUpperHull(GameObject original) {
+			GameObject newObject = CreateUpperHull();
+
+			if (newObject != null) {
+				newObject.transform.position = original.transform.position;
+				newObject.transform.rotation = original.transform.rotation;
+				newObject.transform.localScale = original.transform.localScale;
+
+				// the the material information
+				newObject.GetComponent<Renderer>().sharedMaterials = original.GetComponent<MeshRenderer>().sharedMaterials;
+			}
+
+			return newObject;
+		}
+
+		/**
+		 * Generate a new GameObject from the upper hull of the mesh
+		 * This function will return null if upper hull does not exist
+		 */
 		public GameObject CreateUpperHull() {
 			GameObject newObject = CreateEmptyObject("Upper_Hull", upper_hull);
 
@@ -37,6 +56,25 @@ namespace EzySlice {
 			return newObject;
 		}
 
+		public GameObject CreateLowerHull(GameObject original) {
+			GameObject newObject = CreateLowerHull();
+
+			if (newObject != null) {
+				newObject.transform.position = original.transform.position;
+				newObject.transform.rotation = original.transform.rotation;
+				newObject.transform.localScale = original.transform.localScale;
+
+				// the the material information
+				newObject.GetComponent<Renderer>().sharedMaterials = original.GetComponent<MeshRenderer>().sharedMaterials;
+			}
+
+			return newObject;
+		}
+
+		/**
+		 * Generate a new GameObject from the Lower hull of the mesh
+		 * This function will return null if lower hull does not exist
+		 */
 		public GameObject CreateLowerHull() {
 			GameObject newObject = CreateEmptyObject("Lower_Hull", lower_hull);
 
@@ -67,6 +105,10 @@ namespace EzySlice {
 			get { return this.lower_cross_section; }
 		}
 
+		/**
+		 * Helper function which will create a new GameObject to be able to add
+		 * a new mesh for rendering and return.
+		 */
 		private static GameObject CreateEmptyObject(string name, Mesh hull) {
 			if (hull == null) {
 				return null;

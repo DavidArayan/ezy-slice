@@ -24,7 +24,9 @@ namespace EzySlice {
 		private Vector3 m_normal;
 		private float m_dist;
 
-		// this is for editor debugging only!
+		// this is for editor debugging only! do NOT try to access this
+		// variable at runtime, we will be stripping it out for final
+		// builds
 		#if UNITY_EDITOR
 		private Transform trans_ref;
 		#endif
@@ -33,6 +35,7 @@ namespace EzySlice {
 			this.m_normal = norm;
 			this.m_dist = Vector3.Dot(norm, pos);
 
+			// this is for editor debugging only!
 			#if UNITY_EDITOR
 			trans_ref = null;
 			#endif
@@ -42,6 +45,7 @@ namespace EzySlice {
 			this.m_normal = norm;
 			this.m_dist = dot;
 
+			// this is for editor debugging only!
 			#if UNITY_EDITOR
 			trans_ref = null;
 			#endif
@@ -90,8 +94,6 @@ namespace EzySlice {
 			return SideOfPlane.ON;
 		}
 
-		#if UNITY_EDITOR
-
 		/**
 		 * Editor only DEBUG functionality. This should not be compiled in the final
 		 * Version.
@@ -101,6 +103,12 @@ namespace EzySlice {
 		}
 
 		public void OnDebugDraw(Color drawColor) {
+			// NOTE -> Gizmos are only supported in the editor. We will keep these function
+			// signatures for consistancy however at final build, these will do nothing
+			// TO/DO -> Should we throw a runtime exception if this function tried to get executed
+			// at runtime?
+			#if UNITY_EDITOR
+
 			if (trans_ref == null) {
 				return;
 			}
@@ -116,8 +124,8 @@ namespace EzySlice {
 
 			Gizmos.color = prevColor;
 			Gizmos.matrix = prevMatrix;
-		}
 
-		#endif
+			#endif
+		}
 	}
 }
