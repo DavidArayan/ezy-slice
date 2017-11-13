@@ -1,2 +1,14 @@
 
 *.meta
+
+EzySlice/Library/
+
+EzySlice/Temp/
+
+*.csproj
+
+*.sln
+
+*.userprefs
+
+EzySlice/obj/Debug/
