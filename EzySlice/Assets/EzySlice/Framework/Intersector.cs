@@ -127,9 +127,6 @@ namespace EzySlice {
 						result.AddUpperHull(tb).AddLowerHull(ta);
 					}
 				}
-
-				// all our intersection data is done, return
-				return;
 			}
 
 			// test the case where the b point lies on the plane itself
@@ -158,9 +155,6 @@ namespace EzySlice {
 						result.AddUpperHull(tb).AddLowerHull(ta);
 					}
 				}
-
-				// all our intersection data is done, return
-				return;
 			}
 
 			// test the case where the c point lies on the plane itself
@@ -189,15 +183,12 @@ namespace EzySlice {
 						result.AddUpperHull(tb).AddLowerHull(ta);
 					}
 				}
-
-				// all our intersection data is done, return
-				return;
 			}
 
 			// at this point, all edge cases have been tested and failed, we need to perform
 			// full intersection tests against the lines. From this point onwards we will generate
 			// 3 triangles
-			if (sa != sb && Intersector.Intersect(pl, a, b, out qa)) {
+			else if (sa != sb && Intersector.Intersect(pl, a, b, out qa)) {
 				// the computed UV coordinate of the intersection point
 				Vector2 uvqa = tri.GenerateUVCoords(qa);
 
@@ -253,9 +244,6 @@ namespace EzySlice {
 						}
 					}
 				}
-
-				// we have all the intersection we need, time to exit
-				return;
 			}
 
 			// if line a-b did not intersect (or the lie on the same side of the plane)
