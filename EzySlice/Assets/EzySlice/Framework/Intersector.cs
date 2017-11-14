@@ -28,7 +28,8 @@ namespace EzySlice {
 
 			float t = (pl.dist - Vector3.Dot(normal, a)) / Vector3.Dot(normal, ab);
 
-			if (t >= 0F && t <= 1F) {
+			// need to be careful and compensate for floating errors
+			if (t >= -0.001f && t <= 1.001f) {
 				q = a + t * ab;
 
 				return true;
@@ -78,9 +79,9 @@ namespace EzySlice {
 
 			// detect cases where two points lay straight on the plane, meaning
 			// that the plane is actually parralel with one of the edges of the triangle
-			if ((sa == sb && sa == SideOfPlane.ON) || 
-				(sa == sc && sa == SideOfPlane.ON) ||
-				(sb == sc && sb == SideOfPlane.ON)) 
+			else if ((sa == SideOfPlane.ON && sa == sb) || 
+				(sa == SideOfPlane.ON && sa == sc) || 
+				(sb == SideOfPlane.ON && sb == sc)) 
 			{
 				return;
 			}
@@ -122,17 +123,17 @@ namespace EzySlice {
 					}
 
 					// b point lies on the downside of the plane
-					if (sb == SideOfPlane.DOWN) {
+					else if (sb == SideOfPlane.DOWN) {
 						result.AddUpperHull(tb).AddLowerHull(ta);
 					}
-
-					// all our intersection data is done, return
-					return;
 				}
+
+				// all our intersection data is done, return
+				return;
 			}
 
 			// test the case where the b point lies on the plane itself
-			if (sb == SideOfPlane.ON) {
+			else if (sb == SideOfPlane.ON) {
 				// if the point b is on the plane, test line a-c
 				if (Intersector.Intersect(pl, a, c, out qa)) {
 					// the computed UV coordinate of the intersection point
@@ -153,17 +154,17 @@ namespace EzySlice {
 					}
 
 					// a point lies on the downside of the plane
-					if (sa == SideOfPlane.DOWN) {
+					else if (sa == SideOfPlane.DOWN) {
 						result.AddUpperHull(tb).AddLowerHull(ta);
 					}
-
-					// all our intersection data is done, return
-					return;
 				}
+
+				// all our intersection data is done, return
+				return;
 			}
 
 			// test the case where the c point lies on the plane itself
-			if (sc == SideOfPlane.ON) {
+			else if (sc == SideOfPlane.ON) {
 				// if the point c is on the plane, test line a-b
 				if (Intersector.Intersect(pl, a, b, out qa)) {
 					// the computed UV coordinate of the intersection point
@@ -184,13 +185,13 @@ namespace EzySlice {
 					}
 
 					// a point lies on the downside of the plane
-					if (sa == SideOfPlane.DOWN) {
+					else if (sa == SideOfPlane.DOWN) {
 						result.AddUpperHull(tb).AddLowerHull(ta);
 					}
-
-					// all our intersection data is done, return
-					return;
 				}
+
+				// all our intersection data is done, return
+				return;
 			}
 
 			// at this point, all edge cases have been tested and failed, we need to perform
@@ -262,7 +263,7 @@ namespace EzySlice {
 			// in line a-c and b-c, which we can use to build a new UPPER and LOWER hulls
 			// we are expecting both of these intersection tests to pass, otherwise something
 			// went wrong (float errors? missed a checked case?)
-			if (Intersector.Intersect(pl, a, c, out qa) && Intersector.Intersect(pl, b, c, out qb)) {
+			else if (Intersector.Intersect(pl, c, a, out qa) && Intersector.Intersect(pl, c, b, out qb)) {
 				// in here we know that line a-b actually lie on the same side of the plane, this will
 				// simplify the rest of the logic. We also have our intersection points
 				// the computed UV coordinate of the intersection point
