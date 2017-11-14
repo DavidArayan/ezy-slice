@@ -18,7 +18,7 @@ public class PlaneUsageExample : MonoBehaviour {
 	 * GameObject. We use the GameObject this script is attached to define the position
 	 * and direction of our cutting Plane. Results are then returned to the user.
 	 */
-	private SlicedHull SliceObject(GameObject obj) {
+	public SlicedHull SliceObject(GameObject obj) {
 		// ensure to generate an EzySlice version of the Plane instead of the 
 		// default Unity.
 		EzySlice.Plane cuttingPlane = new EzySlice.Plane();
