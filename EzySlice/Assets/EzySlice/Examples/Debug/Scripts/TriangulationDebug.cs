@@ -36,7 +36,7 @@ public class TriangulationDebug : MonoBehaviour {
 		int[] indices;
 
 		// perform triangulation
-		if (_Triangulator.MonotoneChain(pt, Vector3.up, out verts, out indices, out uvs)) {
+		if (Triangulator.MonotoneChain(pt, Vector3.up, out verts, out indices, out uvs)) {
 			
 			for (int i = 0; i < indices.Length; i+=3) {
 				Triangle newTri = new Triangle(verts[indices[i]], verts[indices[i+1]], verts[indices[i+2]]);

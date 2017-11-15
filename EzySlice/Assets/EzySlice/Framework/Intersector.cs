@@ -233,7 +233,7 @@ namespace EzySlice {
 						// our three generated triangles. Two of these triangles will end
 						// up on either the UPPER or LOWER hulls.
 						Triangle ta = new Triangle(a, qa, qb, uva, uvqa, uvqb);
-						Triangle tb = new Triangle(b, c, qa, uva, uvc, uvqa);
+						Triangle tb = new Triangle(b, c, qa, uvb, uvc, uvqa);
 						Triangle tc = new Triangle(c, qa, qb, uvc, uvqa, uvqb);
 
 						if (sa == SideOfPlane.UP) {

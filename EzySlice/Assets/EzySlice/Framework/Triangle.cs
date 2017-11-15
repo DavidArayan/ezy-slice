@@ -133,6 +133,23 @@ namespace EzySlice {
 			return result.isValid;
 		}
 
+		/**
+		 * Check the triangle winding order, if it's Clock Wise or Counter Clock Wise 
+		 */
+		public bool IsCW() {
+			return SignedSquare(m_pos_a, m_pos_b, m_pos_c) >= -0.001f;
+		}
+
+		/**
+		 * Returns the Signed square of a given triangle, useful for checking the
+		 * winding order
+		 */
+		public static float SignedSquare(Vector3 a, Vector3 b, Vector3 c) {
+			return (a.x * (b.y * c.z - b.z * c.y) - 
+					a.y * (b.x * c.z - b.z * c.x) + 
+					a.z * (b.x * c.y - b.y * c.x));
+		}
+
 		#if UNITY_EDITOR
 
 		/**

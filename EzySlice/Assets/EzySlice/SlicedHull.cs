@@ -24,6 +24,10 @@ namespace EzySlice {
 		}
 
 		public GameObject CreateUpperHull(GameObject original) {
+			return CreateUpperHull(original, null);
+		}
+
+		public GameObject CreateUpperHull(GameObject original, Material crossSectionMat) {
 			GameObject newObject = CreateUpperHull();
 
 			if (newObject != null) {
@@ -33,6 +37,11 @@ namespace EzySlice {
 
 				// the the material information
 				newObject.GetComponent<Renderer>().sharedMaterials = original.GetComponent<MeshRenderer>().sharedMaterials;
+
+				// add the material to the cross section if available
+				if (newObject.transform.childCount > 0 && crossSectionMat != null) {
+					newObject.transform.GetChild(0).GetComponent<Renderer>().sharedMaterial = crossSectionMat;
+				}
 			}
 
 			return newObject;
@@ -57,6 +66,10 @@ namespace EzySlice {
 		}
 
 		public GameObject CreateLowerHull(GameObject original) {
+			return CreateLowerHull(original, null);
+		}
+
+		public GameObject CreateLowerHull(GameObject original, Material crossSectionMat) {
 			GameObject newObject = CreateLowerHull();
 
 			if (newObject != null) {
@@ -66,6 +79,11 @@ namespace EzySlice {
 
 				// the the material information
 				newObject.GetComponent<Renderer>().sharedMaterials = original.GetComponent<MeshRenderer>().sharedMaterials;
+
+				// add the material to the cross section if available
+				if (newObject.transform.childCount > 0 && crossSectionMat != null) {
+					newObject.transform.GetChild(0).GetComponent<Renderer>().sharedMaterial = crossSectionMat;
+				}
 			}
 
 			return newObject;

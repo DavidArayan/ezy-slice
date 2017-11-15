@@ -10,6 +10,7 @@ using EzySlice;
 [CustomEditor(typeof(PlaneUsageExample))]
 public class PlaneUsageExampleEditor : Editor {
 	public GameObject source;
+	public Material crossMat;
 
 	public override void OnInspectorGUI() {
 		PlaneUsageExample plane = (PlaneUsageExample)target;
@@ -34,12 +35,14 @@ public class PlaneUsageExampleEditor : Editor {
 			return;
 		}
 
+		crossMat = (Material) EditorGUILayout.ObjectField(crossMat, typeof(Material), true);
+
 		if (GUILayout.Button("Cut Object")) {
 			SlicedHull hull = plane.SliceObject(source);
 
 			if (hull != null) {
-				hull.CreateLowerHull(source);
-				hull.CreateUpperHull(source);
+				hull.CreateLowerHull(source, crossMat);
+				hull.CreateUpperHull(source, crossMat);
 
 				source.SetActive(false);
 			}

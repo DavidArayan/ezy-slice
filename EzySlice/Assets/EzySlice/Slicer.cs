@@ -11,8 +11,8 @@ namespace EzySlice {
 		 * 
 		 * This function will return null if the object failed to slice
 		 */
-		public static GameObject[] SliceInstantiate(GameObject obj, Plane pl) {
-			SlicedHull slice = Slice(obj, pl);
+		public static GameObject[] SliceInstantiate(GameObject obj, Plane pl, bool genCrossSection = true) {
+			SlicedHull slice = Slice(obj, pl, genCrossSection);
 
 			if (slice == null) {
 				return null;
@@ -61,14 +61,14 @@ namespace EzySlice {
 		 * approprietly before the slice occurs
 		 * See -> Slice(Mesh, Plane) for more info
 		 */
-		public static SlicedHull Slice(GameObject obj, Plane pl) {
+		public static SlicedHull Slice(GameObject obj, Plane pl, bool genCrossSection = true) {
 			MeshFilter renderer = obj.GetComponent<MeshFilter>();
 
 			if (renderer == null) {
 				return null;
 			}
 
-			return Slice(renderer.sharedMesh, pl);
+			return Slice(renderer.sharedMesh, pl, genCrossSection);
 		}
 
 		/**
@@ -79,7 +79,7 @@ namespace EzySlice {
 		 * Returns null if no intersection has been found or the GameObject does not contain
 		 * a valid mesh to cut.
 		 */
-		public static SlicedHull Slice(Mesh sharedMesh, Plane pl) {
+		public static SlicedHull Slice(Mesh sharedMesh, Plane pl, bool genCrossSection = true) {
 			if (sharedMesh == null) {
 				return null;
 			}
@@ -115,7 +115,7 @@ namespace EzySlice {
 					int interHullCount = result.intersectionPointCount;
 
 					for (int i = 0; i < upperHullCount; i++) {
-						upperHull.Add(result.lowerHull[i]);
+						upperHull.Add(result.upperHull[i]);
 					}
 
 					for (int i = 0; i < lowerHullCount; i++) {
@@ -142,7 +142,65 @@ namespace EzySlice {
 			Mesh finalUpperHull = CreateFrom(upperHull);
 			Mesh finalLowerHull = CreateFrom(lowerHull);
 
+			// we need to generate the cross section if set
+			// NOTE -> This uses a MonotoneChain algorithm which will only work
+			// on cross sections which are Convex
+			if (genCrossSection) {
+				Mesh[] crossSections = CreateFrom(crossHull, pl.normal);
+
+				if (crossSections != null) {
+					return new SlicedHull(finalUpperHull, finalLowerHull, crossSections[0], crossSections[1]);
+				}
+			}
+
 			return new SlicedHull(finalUpperHull, finalLowerHull);
+		}
+
+		/**
+		 * Generate Two Meshes (an upper and lower) cross section from a set of intersection
+		 * points and a plane normal. Intersection Points do not have to be in order.
+		 */
+		private static Mesh[] CreateFrom(List<Vector3> intPoints, Vector3 planeNormal) {
+			Vector3[] newVertices;
+			Vector2[] newUvs;
+			int[] newIndices;
+
+			if (Triangulator.MonotoneChain(intPoints, planeNormal, out newVertices, out newIndices, out newUvs)) {
+				Mesh upperCrossSection = new Mesh();
+
+				// fill the mesh structure
+				upperCrossSection.vertices = newVertices;
+				upperCrossSection.uv = newUvs;
+				upperCrossSection.triangles = newIndices;
+
+				// consider computing this array externally instead
+				upperCrossSection.RecalculateNormals();
+
+				// for the lower cross section, we need to flip the triangles so they are 
+				// facing the right way
+				int indiceCount = newIndices.Length;
+				int[] flippedIndices = new int[indiceCount];
+
+				for (int i = 0; i < indiceCount; i+=3) {
+					flippedIndices[i] = newIndices[i];
+					flippedIndices[i + 1] = newIndices[i + 2];
+					flippedIndices[i + 2] = newIndices[i + 1];
+				}
+
+				Mesh lowerCrossSection = new Mesh();
+
+				// fill the mesh structure
+				lowerCrossSection.vertices = newVertices;
+				lowerCrossSection.uv = newUvs;
+				lowerCrossSection.triangles = flippedIndices;
+
+				// consider computing this array externally instead
+				lowerCrossSection.RecalculateNormals();
+
+				return new Mesh[] {upperCrossSection, lowerCrossSection};
+			}
+
+			return null;
 		}
 
 		/**
@@ -179,9 +237,18 @@ namespace EzySlice {
 				newUvs[i1] = newTri.uvB;
 				newUvs[i2] = newTri.uvC;
 
-				newIndices[i0] = i0;
-				newIndices[i1] = i1;
-				newIndices[i2] = i2;
+				// note -> this case could be optimized by having the order
+				// returned properly from the intersector
+				if (newTri.IsCW()) {
+					newIndices[i0] = i0;
+					newIndices[i1] = i1;
+					newIndices[i2] = i2;	
+				}
+				else {
+					newIndices[i0] = i0;
+					newIndices[i1] = i2;
+					newIndices[i2] = i1;
+				}
 
 				addedCount += 3;
 			}

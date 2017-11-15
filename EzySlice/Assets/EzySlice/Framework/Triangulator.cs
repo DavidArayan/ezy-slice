@@ -9,7 +9,7 @@ namespace EzySlice {
 	 * TO/DO -> Rename this to Triangulator and deprecate the
 	 * older functionality
 	 */
-	public sealed class _Triangulator {
+	public sealed class Triangulator {
 
 		/**
 		 * Represents a 3D Vertex which has been mapped onto a 2D surface
@@ -155,8 +155,8 @@ namespace EzySlice {
 
 				// generate and place the UV
 				Vector2 mappedValue = val.mappedValue;
-				mappedValue.x = (mappedValue.x / maxDivX);
-				mappedValue.y = (mappedValue.y / maxDivY);
+				mappedValue.x = (mappedValue.x / maxDivX) * 0.5f;
+				mappedValue.y = (mappedValue.y / maxDivY) * 0.5f;
 
 				uv[i] = mappedValue;
 			}
