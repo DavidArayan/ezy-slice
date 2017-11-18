@@ -239,7 +239,9 @@ namespace EzySlice {
 
 				// note -> this case could be optimized by having the order
 				// returned properly from the intersector
-				if (newTri.IsCW()) {
+				// -> note -> this is no longer required since triangles are added
+				// as clockwise from the intersector
+				/*if (newTri.IsCW()) {
 					newIndices[i0] = i0;
 					newIndices[i1] = i1;
 					newIndices[i2] = i2;	
@@ -248,7 +250,10 @@ namespace EzySlice {
 					newIndices[i0] = i0;
 					newIndices[i1] = i2;
 					newIndices[i2] = i1;
-				}
+				}*/
+				newIndices[i0] = i0;
+				newIndices[i1] = i1;
+				newIndices[i2] = i2;
 
 				addedCount += 3;
 			}

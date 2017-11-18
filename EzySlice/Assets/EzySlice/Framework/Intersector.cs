@@ -115,7 +115,7 @@ namespace EzySlice {
 					// our two generated triangles, we need to figure out which
 					// triangle goes into the UPPER hull and which goes into the LOWER hull
 					Triangle ta = new Triangle(a, b, qa, uva, uvb, uvq);
-					Triangle tb = new Triangle(a, c, qa, uva, uvc, uvq);
+					Triangle tb = new Triangle(a, qa, c, uva, uvq, uvc);
 
 					// b point lies on the upside of the plane
 					if (sb == SideOfPlane.UP) {
@@ -143,7 +143,7 @@ namespace EzySlice {
 					// our two generated triangles, we need to figure out which
 					// triangle goes into the UPPER hull and which goes into the LOWER hull
 					Triangle ta = new Triangle(a, b, qa, uva, uvb, uvq);
-					Triangle tb = new Triangle(b, c, qa, uvb, uvc, uvq);
+					Triangle tb = new Triangle(qa, b, c, uvq, uvb, uvc);
 
 					// a point lies on the upside of the plane
 					if (sa == SideOfPlane.UP) {
@@ -170,8 +170,8 @@ namespace EzySlice {
 
 					// our two generated triangles, we need to figure out which
 					// triangle goes into the UPPER hull and which goes into the LOWER hull
-					Triangle ta = new Triangle(a, c, qa, uva, uvc, uvq);
-					Triangle tb = new Triangle(b, c, qa, uvb, uvc, uvq);
+					Triangle ta = new Triangle(a, qa, c, uva, uvq, uvc);
+					Triangle tb = new Triangle(qa, b, c, uvq, uvb, uvc);
 
 					// a point lies on the upside of the plane
 					if (sa == SideOfPlane.UP) {
@@ -209,15 +209,15 @@ namespace EzySlice {
 
 						// our three generated triangles. Two of these triangles will end
 						// up on either the UPPER or LOWER hulls.
-						Triangle ta = new Triangle(a, c, qb, uva, uvc, uvqb);
+						Triangle ta = new Triangle(qa, b, qb, uvqa, uvb, uvqb);
 						Triangle tb = new Triangle(a, qa, qb, uva, uvqa, uvqb);
-						Triangle tc = new Triangle(b, qa, qb, uvb, uvqa, uvqb);
+						Triangle tc = new Triangle(a, qb, c, uva, uvqb, uvc);
 
 						if (sa == SideOfPlane.UP) {
-							result.AddUpperHull(ta).AddUpperHull(tb).AddLowerHull(tc);
+							result.AddUpperHull(tb).AddUpperHull(tc).AddLowerHull(ta);
 						} 
 						else {
-							result.AddLowerHull(ta).AddLowerHull(tb).AddUpperHull(tc);
+							result.AddLowerHull(tb).AddLowerHull(tc).AddUpperHull(ta);
 						}
 					}
 				}
@@ -233,8 +233,8 @@ namespace EzySlice {
 						// our three generated triangles. Two of these triangles will end
 						// up on either the UPPER or LOWER hulls.
 						Triangle ta = new Triangle(a, qa, qb, uva, uvqa, uvqb);
-						Triangle tb = new Triangle(b, c, qa, uvb, uvc, uvqa);
-						Triangle tc = new Triangle(c, qa, qb, uvc, uvqa, uvqb);
+						Triangle tb = new Triangle(qa, b, c, uvqa, uvb, uvc);
+						Triangle tc = new Triangle(qb, qa, c, uvqb, uvqa, uvc);
 
 						if (sa == SideOfPlane.UP) {
 							result.AddUpperHull(ta).AddLowerHull(tb).AddLowerHull(tc);
@@ -263,15 +263,15 @@ namespace EzySlice {
 
 				// our three generated triangles. Two of these triangles will end
 				// up on either the UPPER or LOWER hulls.
-				Triangle ta = new Triangle(a, b, qa, uva, uvb, uvqa);
-				Triangle tb = new Triangle(b, qa, qb, uva, uvqa, uvqb);
-				Triangle tc = new Triangle(c, qa, qb, uvc, uvqa, uvqb);
+				Triangle ta = new Triangle(qa, qb, c, uvqa, uvqb, uvc);
+				Triangle tb = new Triangle(a, qb, qa, uva, uvqb, uvqa);
+				Triangle tc = new Triangle(a, b, qb, uva, uvb, uvqb);
 
 				if (sa == SideOfPlane.UP) {
-					result.AddUpperHull(ta).AddUpperHull(tb).AddLowerHull(tc);
+					result.AddUpperHull(tb).AddUpperHull(tc).AddLowerHull(ta);
 				}
 				else {
-					result.AddLowerHull(ta).AddLowerHull(tb).AddUpperHull(tc);
+					result.AddLowerHull(tb).AddLowerHull(tc).AddUpperHull(ta);
 				}
 			}
 		}
