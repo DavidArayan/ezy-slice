@@ -40,7 +40,6 @@ public class PlaneUsageExample : MonoBehaviour {
 		return Slicer.Slice(obj, cuttingPlane);
 	}
 
-
 	#if UNITY_EDITOR
 	/**
 	 * This is for Visual debugging purposes in the editor 
