@@ -21,4 +21,8 @@
 * Add ability to create cross sections for Concave object slices
 * Expand the api to provide greater flexibility and utility
 * Integrate with the Unity3D Editor
-* Add more examples and scenes
+
+#### Example Projects
+
+* Visit https://github.com/DavidArayan/EzySlice-Example-Scenes for example/debug scenes using the Slicer Framework
+* More Example Projects coming soon!
