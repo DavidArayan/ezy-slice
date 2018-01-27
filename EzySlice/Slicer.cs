@@ -138,20 +138,22 @@ namespace EzySlice {
 				}
 			}
 
-			// start creating our hulls
-			Mesh finalUpperHull = CreateFrom(upperHull);
-			Mesh finalLowerHull = CreateFrom(lowerHull);
+			// we don't want cross sections, 
+			if (!genCrossSection) {
+				// start creating our hulls
+				Mesh finalUpperHullNoCross = CreateFrom(upperHull, null);
+				Mesh finalLowerHullNoCross = CreateFrom(lowerHull, null);
+
+				return new SlicedHull(finalUpperHullNoCross, finalLowerHullNoCross);
+			}
 
 			// we need to generate the cross section if set
 			// NOTE -> This uses a MonotoneChain algorithm which will only work
 			// on cross sections which are Convex
-			if (genCrossSection) {
-				Mesh[] crossSections = CreateFrom(crossHull, pl.normal);
+			List<Triangle> crossSection = CreateFrom(crossHull, pl.normal);
 
-				if (crossSections != null) {
-					return new SlicedHull(finalUpperHull, finalLowerHull, crossSections[0], crossSections[1]);
-				}
-			}
+			Mesh finalUpperHull = CreateFrom(upperHull, crossSection, true);
+			Mesh finalLowerHull = CreateFrom(lowerHull, crossSection, false);
 
 			return new SlicedHull(finalUpperHull, finalLowerHull);
 		}
@@ -160,44 +162,11 @@ namespace EzySlice {
 		 * Generate Two Meshes (an upper and lower) cross section from a set of intersection
 		 * points and a plane normal. Intersection Points do not have to be in order.
 		 */
-		private static Mesh[] CreateFrom(List<Vector3> intPoints, Vector3 planeNormal) {
-			Vector3[] newVertices;
-			Vector2[] newUvs;
-			int[] newIndices;
+		private static List<Triangle> CreateFrom(List<Vector3> intPoints, Vector3 planeNormal) {
+			List<Triangle> tris;
 
-			if (Triangulator.MonotoneChain(intPoints, planeNormal, out newVertices, out newIndices, out newUvs)) {
-				Mesh upperCrossSection = new Mesh();
-
-				// fill the mesh structure
-				upperCrossSection.vertices = newVertices;
-				upperCrossSection.uv = newUvs;
-				upperCrossSection.triangles = newIndices;
-
-				// consider computing this array externally instead
-				upperCrossSection.RecalculateNormals();
-
-				// for the lower cross section, we need to flip the triangles so they are 
-				// facing the right way
-				int indiceCount = newIndices.Length;
-				int[] flippedIndices = new int[indiceCount];
-
-				for (int i = 0; i < indiceCount; i+=3) {
-					flippedIndices[i] = newIndices[i];
-					flippedIndices[i + 1] = newIndices[i + 2];
-					flippedIndices[i + 2] = newIndices[i + 1];
-				}
-
-				Mesh lowerCrossSection = new Mesh();
-
-				// fill the mesh structure
-				lowerCrossSection.vertices = newVertices;
-				lowerCrossSection.uv = newUvs;
-				lowerCrossSection.triangles = flippedIndices;
-
-				// consider computing this array externally instead
-				lowerCrossSection.RecalculateNormals();
-
-				return new Mesh[] {upperCrossSection, lowerCrossSection};
+			if (Triangulator.MonotoneChain(intPoints, planeNormal, out tris)) {
+				return tris;
 			}
 
 			return null;
@@ -205,9 +174,10 @@ namespace EzySlice {
 
 		/**
 		 * Generate a mesh from the provided hull made of triangles
+		 * ADDED -> Generate the Cross Section into the same mesh
 		 */
-		private static Mesh CreateFrom(List<Triangle> hull) {
-			int count = hull.Count;
+		private static Mesh CreateFrom(List<Triangle> hull, List<Triangle> crossSection, bool isUpper = true) {
+			int count = crossSection == null ? hull.Count : (hull.Count + crossSection.Count);
 
 			if (count <= 0) {
 				return null;
@@ -215,14 +185,16 @@ namespace EzySlice {
 
 			Mesh newMesh = new Mesh();
 
+			int hullCount = hull.Count;
+
 			Vector3[] newVertices = new Vector3[count * 3];
 			Vector2[] newUvs = new Vector2[count * 3];
-			int[] newIndices = new int[count * 3];
+			int[] newIndices = new int[hullCount * 3];
 
 			int addedCount = 0;
 
 			// fill our mesh arrays
-			for (int i = 0; i < count; i++) {
+			for (int i = 0; i < hullCount; i++) {
 				Triangle newTri = hull[i];
 
 				int i0 = addedCount + 0;
@@ -237,20 +209,8 @@ namespace EzySlice {
 				newUvs[i1] = newTri.uvB;
 				newUvs[i2] = newTri.uvC;
 
-				// note -> this case could be optimized by having the order
-				// returned properly from the intersector
-				// -> note -> this is no longer required since triangles are added
-				// as clockwise from the intersector
-				/*if (newTri.IsCW()) {
-					newIndices[i0] = i0;
-					newIndices[i1] = i1;
-					newIndices[i2] = i2;	
-				}
-				else {
-					newIndices[i0] = i0;
-					newIndices[i1] = i2;
-					newIndices[i2] = i1;
-				}*/
+				// triangles are returned in clocwise order from the
+				// intersector, no need to sort these
 				newIndices[i0] = i0;
 				newIndices[i1] = i1;
 				newIndices[i2] = i2;
@@ -258,10 +218,61 @@ namespace EzySlice {
 				addedCount += 3;
 			}
 
+			int[] crossIndices = null;
+
+			// also generate our cross sections
+			if (crossSection != null) {
+				int crossCount = crossSection.Count;
+				int crossIndex = 0;
+
+				crossIndices = new int[crossCount * 3];
+
+				for (int i = 0; i < crossCount; i++) {
+					Triangle newTri = crossSection[i];
+
+					int i0 = addedCount + 0;
+					int i1 = addedCount + 1;
+					int i2 = addedCount + 2;
+
+					newVertices[i0] = newTri.positionA;
+					newVertices[i1] = newTri.positionB;
+					newVertices[i2] = newTri.positionC;
+
+					newUvs[i0] = newTri.uvA;
+					newUvs[i1] = newTri.uvB;
+					newUvs[i2] = newTri.uvC;
+
+					// add triangles in clockwise for upper
+					// and reversed for lower hulls, to ensure the mesh
+					// is facing the right direction
+					if (isUpper) {
+						crossIndices[crossIndex] = i0;
+						crossIndices[crossIndex + 1] = i1;
+						crossIndices[crossIndex + 2] = i2;
+					}
+					else {
+						crossIndices[crossIndex] = i0;
+						crossIndices[crossIndex + 1] = i2;
+						crossIndices[crossIndex + 2] = i1;
+					}
+
+					addedCount += 3;
+					crossIndex += 3;
+				}
+			}
+
+			newMesh.subMeshCount = 2;
 			// fill the mesh structure
 			newMesh.vertices = newVertices;
 			newMesh.uv = newUvs;
-			newMesh.triangles = newIndices;
+
+			// set the first group of triangles
+			newMesh.SetTriangles(newIndices, 0, false);
+
+			// set the cross indices if they exist
+			if (crossIndices != null) {
+				newMesh.SetTriangles(crossIndices, 1, false);
+			}
 
 			// consider computing this array externally instead
 			newMesh.RecalculateNormals();

@@ -40,15 +40,12 @@ namespace EzySlice {
 		 * plane defined as planeNormal. Algorithm will output vertices, indices and UV coordinates
 		 * as arrays
 		 */
-		public static bool MonotoneChain(List<Vector3> vertices, Vector3 normal, out Vector3[] verts, out int[] indices, out Vector2[] uv) {
+		public static bool MonotoneChain(List<Vector3> vertices, Vector3 normal, out List<Triangle> tri) {
 			int count = vertices.Count;
 
 			// we cannot triangulate less than 3 points. Use minimum of 3 points
 			if (count < 3) {
-				verts = null;
-				indices = null;
-				uv = null;
-
+				tri = null;
 				return false;
 			}
 
@@ -130,46 +127,45 @@ namespace EzySlice {
 			// finally we can build our mesh, generate all the variables
 			// and fill them up
 			int vertCount = k - 1;
+			int triCount = (vertCount - 2) * 3;
 
 			// this should not happen, but here just in case
 			if (vertCount < 3) {
-				verts = null;
-				indices = null;
-				uv = null;
-
+				tri = null;
 				return false;
 			}
 
-			int triCount = (vertCount - 2) * 3;
+			// ensure List does not dynamically grow, performing copy ops each time!
+			tri = new List<Triangle>(triCount / 3);
 
-			verts = new Vector3[vertCount];
-			indices = new int[triCount];
-			uv = new Vector2[vertCount];
+			float maxDiv = Mathf.Max(maxDivX, maxDivY);
 
-			// generate both the vertices and uv's in this loop
-			for (int i = 0; i < vertCount; i++) {
-				Mapped2D val = hulls[i];
-
-				// place the vertex
-				verts[i] = val.originalValue;
-
-				// generate and place the UV
-				Vector2 mappedValue = val.mappedValue;
-				mappedValue.x = (mappedValue.x / maxDivX) * 0.5f;
-				mappedValue.y = (mappedValue.y / maxDivY) * 0.5f;
-
-				uv[i] = mappedValue;
-			}
-				
 			int indexCount = 1;
 
-			// generate the triangles/indices
+			// generate both the vertices and uv's in this loop
 			for (int i = 0; i < triCount; i+=3) {
-				indices[i + 0] = 0;
-				indices[i + 1] = indexCount;
-				indices[i + 2] = indexCount + 1;
+				// the Vertices in our triangle
+				Mapped2D posA = hulls[0];
+				Mapped2D posB = hulls[indexCount];
+				Mapped2D posC = hulls[indexCount + 1];
 
-				indexCount ++;
+				// generate UV Maps
+				Vector2 uvA = posA.mappedValue;
+				Vector2 uvB = posB.mappedValue;
+				Vector2 uvC = posC.mappedValue;
+
+				uvA.x = (uvA.x / maxDiv) * 0.5f;
+				uvA.y = (uvA.y / maxDiv) * 0.5f;
+
+				uvB.x = (uvB.x / maxDiv) * 0.5f;
+				uvB.y = (uvB.y / maxDiv) * 0.5f;
+
+				uvC.x = (uvC.x / maxDiv) * 0.5f;
+				uvC.y = (uvC.y / maxDiv) * 0.5f;
+
+				tri.Add(new Triangle(posA.originalValue, posB.originalValue, posC.originalValue, uvA, uvB, uvC));
+
+				indexCount++;
 			}
 
 			return true;
