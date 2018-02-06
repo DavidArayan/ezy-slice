@@ -9,8 +9,8 @@ namespace EzySlice {
 	 * to utility functions and the final Mesh data for each section of the HULL.
 	 */
 	public sealed class SlicedHull {
-		private Mesh upper_hull;
-		private Mesh lower_hull;
+		private readonly Mesh upper_hull;
+		private readonly Mesh lower_hull;
 
 		public SlicedHull(Mesh upperHull, Mesh lowerHull) {
 			this.upper_hull = upperHull;
