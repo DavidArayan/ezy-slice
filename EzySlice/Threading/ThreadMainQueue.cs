@@ -11,7 +11,8 @@ namespace EzySlice {
      * Called on the Unity main thread. This can be useful if updating UI objects
      * or performing operations which require main thread access.
      */
-    public class ThreadMainQueue : MonoBehaviour {
+    [ExecuteInEditMode]
+    public sealed class ThreadMainQueue : MonoBehaviour {
         // our main queue of jobs which require a callback
         private readonly Queue<ThreadJob> finishedJobs = new Queue<ThreadJob>();
 

@@ -11,7 +11,7 @@ namespace EzySlice {
      * Using SingletonPool.Get<YourClass>() will either return a previous instance of the Object or Create
      * and attach a new Instance to a GameObject. As such, Get() method will never return null.
      */
-    public class SingletonPool {
+    public sealed class SingletonPool {
 
         // since we are storing singleton objects, we only need to associate one ID per Instance
         // TO-DO look into hashing strings to store ID's as integers for faster access

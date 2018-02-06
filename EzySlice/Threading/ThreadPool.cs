@@ -9,14 +9,14 @@ namespace EzySlice {
      * can be used in many projects properly. Managing a pool of threads is far better for
      * performance than spawning and destroying threads each and every time.
      */
-    public class ThreadPool {
+    public sealed class ThreadPool {
         public const int DEFAULT_POOL_SIZE = 128;
 
         /**
          * A Basic Internal use class to quickly queue jobs for execution via
          * simple delegates
          */
-        private class BasicJob : ThreadJob {
+        internal class BasicJob : ThreadJob {
             // we don't need to override these values once constructed
             private readonly Action run_action;
             private readonly Action end_action;

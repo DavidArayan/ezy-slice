@@ -11,7 +11,7 @@ namespace EzySlice {
 	 * via an optional indices array. Could lead for a faster
 	 * intersection test aswell.
 	 */
-	public class IntersectionResult {
+    public sealed class IntersectionResult {
 
 		// general tag to check if this structure is valid
 		private bool is_success;
