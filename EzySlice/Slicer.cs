@@ -292,6 +292,8 @@ namespace EzySlice {
 				newMesh.SetTriangles(triangles[i], i, false);
 			}
 
+            newMesh.RecalculateNormals();
+
 			return newMesh;
 		}
 
