@@ -105,6 +105,9 @@ namespace EzySlice {
 			// we reuse this object for all intersection tests
 			IntersectionResult result = new IntersectionResult();
 
+            // only generate UV coordinates if the mesh has any
+            bool genUV = ve.Length == uv.Length;
+
 			// iterate over all the submeshes individually. vertices and indices
 			// are all shared within the submesh
 			for (int submesh = 0; submesh < submeshCount; submesh++) {
@@ -120,7 +123,9 @@ namespace EzySlice {
 					int i1 = indices[index + 1];
 					int i2 = indices[index + 2];
 
-					Triangle newTri = new Triangle(ve[i0], ve[i1], ve[i2], uv[i0], uv[i1], uv[i2]);
+					Triangle newTri = genUV ? 
+                        new Triangle(ve[i0], ve[i1], ve[i2], uv[i0], uv[i1], uv[i2]) :
+                        new Triangle(ve[i0], ve[i1], ve[i2]);
 
 					// slice this particular triangle with the provided
 					// plane
