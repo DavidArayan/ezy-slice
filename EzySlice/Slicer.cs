@@ -26,42 +26,25 @@ namespace EzySlice {
 				return null;
 			}
 
-			GameObject upperHull = slice.CreateUpperHull();
+            GameObject upperHull = slice.CreateUpperHull(obj);
+            GameObject lowerHull = slice.CreateLowerHull(obj);
 
-			if (upperHull != null) {
-				// set the positional information
-				upperHull.transform.position = obj.transform.position;
-				upperHull.transform.rotation = obj.transform.rotation;
-				upperHull.transform.localScale = obj.transform.localScale;
+            if (upperHull != null && lowerHull != null) {
+                return new GameObject[] { upperHull, lowerHull };
+            }
 
-				// the the material information
-				upperHull.GetComponent<Renderer>().sharedMaterials = obj.GetComponent<MeshRenderer>().sharedMaterials;
-			}
+            // otherwise return only the upper hull
+            if (upperHull != null) {
+                return new GameObject[] { upperHull };
+            }
 
-			GameObject lowerHull = slice.CreateLowerHull();
+            // otherwise return only the lower hull
+            if (lowerHull != null) {
+                return new GameObject[] { lowerHull };
+            }
 
-			if (lowerHull != null) {
-				// set the positional information
-				lowerHull.transform.position = obj.transform.position;
-				lowerHull.transform.rotation = obj.transform.rotation;
-				lowerHull.transform.localScale = obj.transform.localScale;
-
-				// the the material information
-				lowerHull.GetComponent<Renderer>().sharedMaterials = obj.GetComponent<MeshRenderer>().sharedMaterials;
-			}
-
-			// return both if upper and lower hulls were generated
-			if (upperHull != null && lowerHull != null) {
-				return new GameObject[] {upperHull, lowerHull};
-			}
-
-			// otherwise return only the upper hull
-			if (upperHull != null) {
-				return new GameObject[] {upperHull};
-			}
-
-			// otherwise return null
-			return null;
+            // nothing to return, so return nothing!
+            return null;
 		}
 
 		/**
@@ -105,6 +88,9 @@ namespace EzySlice {
 			// we reuse this object for all intersection tests
 			IntersectionResult result = new IntersectionResult();
 
+            // only generate UV coordinates if the mesh has any
+            bool genUV = ve.Length == uv.Length;
+
 			// iterate over all the submeshes individually. vertices and indices
 			// are all shared within the submesh
 			for (int submesh = 0; submesh < submeshCount; submesh++) {
@@ -120,7 +106,9 @@ namespace EzySlice {
 					int i1 = indices[index + 1];
 					int i2 = indices[index + 2];
 
-					Triangle newTri = new Triangle(ve[i0], ve[i1], ve[i2], uv[i0], uv[i1], uv[i2]);
+					Triangle newTri = genUV ? 
+                        new Triangle(ve[i0], ve[i1], ve[i2], uv[i0], uv[i1], uv[i2]) :
+                        new Triangle(ve[i0], ve[i1], ve[i2]);
 
 					// slice this particular triangle with the provided
 					// plane
