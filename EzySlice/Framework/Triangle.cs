@@ -137,8 +137,15 @@ namespace EzySlice {
 		 * Check the triangle winding order, if it's Clock Wise or Counter Clock Wise 
 		 */
 		public bool IsCW() {
-			return SignedSquare(m_pos_a, m_pos_b, m_pos_c) >= -0.001f;
+			return SignedSquare(m_pos_a, m_pos_b, m_pos_c) >= 0.0f;
 		}
+
+        /**
+         * Test if the provided point is current on or in the triangle
+         */
+        public bool TestPoint(Vector3 pt) {
+            return Triangle.TestPointInTriangle(m_pos_a, m_pos_b, m_pos_c, pt);
+        }
 
 		/**
 		 * Returns the Signed square of a given triangle, useful for checking the
@@ -150,7 +157,32 @@ namespace EzySlice {
 					a.z * (b.x * c.y - b.y * c.x));
 		}
 
-		#if UNITY_EDITOR
+        /**
+         * Test if the point pt lies in triangle a, b, c 
+         */
+        public static bool TestPointInTriangle(Vector3 a, Vector3 b, Vector3 c, Vector3 pt) {
+            Vector3 ap = a - pt;
+            Vector3 bp = b - pt;
+            Vector3 cp = c - pt;
+
+            float ab = Vector3.Dot(ap, bp);
+            float ac = Vector3.Dot(ap, cp);
+            float bc = Vector3.Dot(bp, cp);
+            float cc = Vector3.Dot(cp, cp);
+
+            if (bc * ac - cc * ab < 0.0f) {
+                return false;
+            }
+
+            float bb = Vector3.Dot(bp, bp);
+
+            if (ab * bc - ac * bb < 0.0f) {
+                return false;
+            }
+
+            // pt is in or on the triangle a,b,c
+            return true;
+        }
 
 		/**
 		 * Editor only DEBUG functionality. This should not be compiled in the final
@@ -161,6 +193,8 @@ namespace EzySlice {
 		}
 
 		public void OnDebugDraw(Color drawColor) {
+            #if UNITY_EDITOR
+
 			Color prevColor = Gizmos.color;
 
 			Gizmos.color = drawColor;
@@ -170,8 +204,8 @@ namespace EzySlice {
 			Gizmos.DrawLine(positionC, positionA);
 
 			Gizmos.color = prevColor;
-		}
 
-		#endif
+            #endif
+		}
 	}
 }

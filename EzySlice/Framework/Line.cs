@@ -27,5 +27,27 @@ namespace EzySlice {
 		public Vector3 positionB {
 			get { return this.m_pos_b; }
 		}
+
+        /**
+         * Editor only DEBUG functionality. This should not be compiled in the final
+         * Version.
+         */
+        public void OnDebugDraw() {
+            OnDebugDraw(Color.white);
+        }
+
+        public void OnDebugDraw(Color drawColor) {
+            #if UNITY_EDITOR
+
+            Color prevColor = Gizmos.color;
+
+            Gizmos.color = drawColor;
+
+            Gizmos.DrawLine(positionA, positionB);
+
+            Gizmos.color = prevColor;
+
+            #endif
+        }
 	}
 }

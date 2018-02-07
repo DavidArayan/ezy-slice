@@ -5,10 +5,6 @@ using UnityEngine;
 
 namespace EzySlice {
 
-	/**
-	 * TO/DO -> Rename this to Triangulator and deprecate the
-	 * older functionality
-	 */
 	public sealed class Triangulator {
 
 		/**
@@ -34,11 +30,104 @@ namespace EzySlice {
 			}
 		}
 
+        /**
+         * O(n ^ 2) Concave Hull Algorithm.
+         * Accepts a list of vertices as Vector3 and triangulates them according to a projection
+         * plane defined as planeNormal.
+         * 
+         * Note that the vertices must be sorted in a specific manner to work properly with EarClip.
+         * A random set of points will likely yield incorrect results. Please read about the EarClip
+         * Algorithm to learn on how to initialise the set of points for triangulation.
+         * 
+         * Based on an Implementation from RT COLLISION DETECTION
+         */
+        public static bool EarClip(List<Vector3> vertices, out List<Triangle> tri) {
+            int count = vertices.Count;
+
+            // we cannot triangulate less than 3 points. Use minimum of 3 points
+            if (count < 3) {
+                tri = null;
+                return false;
+            }
+
+            tri = new List<Triangle>();
+
+            // effective linked list structures with indices
+            int[] prev = new int[count];
+            int[] next = new int[count];
+
+            // TO-DO, calculate the UV Coordinates
+            float maxDivX = 0.0f;
+            float maxDivY = 0.0f;
+
+            // build our linked list
+            for (int i = 0; i < count; i++) {
+                prev[i] = i - 1;
+                next[i] = i + 1;
+            }
+
+            prev[0] = count - 1;
+            next[count - 1] = 0;
+
+            // setup our structure before the triangulation takes place
+            int index = 0;
+
+            while (count > 3) {
+                // test if the current vertices is an ear
+                bool isEar = true;
+
+                // grab our 2D mapped triangle
+                Vector3 triA = vertices[prev[index]];
+                Vector3 triB = vertices[index];
+                Vector3 triC = vertices[next[index]];
+
+                if (Triangle.SignedSquare(triA, triB, triC) < 0.0f) {
+                    int k = next[next[index]];
+
+                    do {
+                        Vector3 pt = vertices[k];
+
+                        // if pt is inside the ear, then this is not an ear tri
+                        if (Triangle.TestPointInTriangle(triA, triB, triC, pt)) {
+                            isEar = false;
+
+                            break;
+                        }
+
+                        k = next[k];
+                    }
+                    while (k != prev[index]);
+                }
+                else {
+                    isEar = false;
+                }
+
+                if (isEar) {
+                    // we have an ear, output the triangle
+                    tri.Add(new Triangle(triA, triB, triC));
+
+                    // shift the linked list, effectively removing the clip
+                    next[prev[index]] = next[index];
+                    prev[next[index]] = prev[index];
+
+                    count--;
+
+                    index = prev[index];
+                }
+                else {
+                    index = next[index];
+                }
+            }
+
+            return true;
+        }
+
 		/**
 		 * O(n log n) Convex Hull Algorithm. 
 		 * Accepts a list of vertices as Vector3 and triangulates them according to a projection
-		 * plane defined as planeNormal. Algorithm will output vertices, indices and UV coordinates
-		 * as arrays
+		 * plane defined as planeNormal.
+		 * 
+		 * Based on an Implementation from RT COLLISION DETECTION
 		 */
 		public static bool MonotoneChain(List<Vector3> vertices, Vector3 normal, out List<Triangle> tri) {
 			int count = vertices.Count;
