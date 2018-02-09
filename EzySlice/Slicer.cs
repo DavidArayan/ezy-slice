@@ -11,6 +11,36 @@ namespace EzySlice {
 		internal class SlicedSubmesh {
 			public readonly List<Triangle> upperHull = new List<Triangle>();
 			public readonly List<Triangle> lowerHull = new List<Triangle>();
+
+            /**
+             * Check if the submesh has had any UV's added.
+             * NOTE -> This should be supported properly
+             */
+            public bool hasUV {
+                get {
+                    return upperHull[0].hasUV;
+                }
+            }
+
+            /**
+             * Check if the submesh has had any Normals added.
+             * NOTE -> This should be supported properly
+             */
+            public bool hasNormal {
+                get {
+                    return upperHull[0].hasNormal;
+                }
+            }
+
+            /**
+             * Check if the submesh has had any Tangents added.
+             * NOTE -> This should be supported properly
+             */
+            public bool hasTangent {
+                get {
+                    return upperHull[0].hasTangent;
+                }
+            }
 		}
 
 		/**
@@ -75,8 +105,10 @@ namespace EzySlice {
 				return null;
 			}
 
-			Vector3[] ve = sharedMesh.vertices;
+			Vector3[] verts = sharedMesh.vertices;
 			Vector2[] uv = sharedMesh.uv;
+            Vector3[] norm = sharedMesh.normals;
+            Vector4[] tan = sharedMesh.tangents;
 
 			int submeshCount = sharedMesh.subMeshCount;
 
@@ -88,8 +120,10 @@ namespace EzySlice {
 			// we reuse this object for all intersection tests
 			IntersectionResult result = new IntersectionResult();
 
-            // only generate UV coordinates if the mesh has any
-            bool genUV = ve.Length == uv.Length;
+            // see if we would like to split the mesh using uv, normals and tangents
+            bool genUV = verts.Length == uv.Length;
+            bool genNorm = verts.Length == norm.Length;
+            bool genTan = verts.Length == tan.Length;
 
 			// iterate over all the submeshes individually. vertices and indices
 			// are all shared within the submesh
@@ -106,9 +140,22 @@ namespace EzySlice {
 					int i1 = indices[index + 1];
 					int i2 = indices[index + 2];
 
-					Triangle newTri = genUV ? 
-                        new Triangle(ve[i0], ve[i1], ve[i2], uv[i0], uv[i1], uv[i2]) :
-                        new Triangle(ve[i0], ve[i1], ve[i2]);
+                    Triangle newTri = new Triangle(verts[i0], verts[i1], verts[i2]);
+
+                    // generate UV if available
+                    if (genUV) {
+                        newTri.SetUV(uv[i0], uv[i1], uv[i2]);
+                    }
+
+                    // generate normals if available
+                    if (genNorm) {
+                        newTri.SetNormal(norm[i0], norm[i1], norm[i2]);
+                    }
+
+                    // generate tangents if available
+                    if (genTan) {
+                        newTri.SetTangent(tan[i0], tan[i1], tan[i2]);
+                    }
 
 					// slice this particular triangle with the provided
 					// plane
@@ -130,7 +177,7 @@ namespace EzySlice {
 						}
 					}
 					else {
-						SideOfPlane side = pl.SideOf(ve[i0]);
+						SideOfPlane side = pl.SideOf(verts[i0]);
 
 						if (side == SideOfPlane.UP || side == SideOfPlane.ON) {
 							mesh.upperHull.Add(newTri);
@@ -182,9 +229,17 @@ namespace EzySlice {
 
 			Mesh newMesh = new Mesh();
 
+            int arrayLen = (total + crossCount) * 3;
+
+            bool hasUV = meshes[0].hasUV;
+            bool hasNormal = meshes[0].hasNormal;
+            bool hasTangent = meshes[0].hasTangent;
+
 			// vertices and uv's are common for all submeshes
-			Vector3[] newVertices = new Vector3[(total + crossCount) * 3];
-			Vector2[] newUvs = new Vector2[(total + crossCount) * 3];
+            Vector3[] newVertices = new Vector3[arrayLen];
+            Vector2[] newUvs = hasUV ? new Vector2[arrayLen] : null;
+            Vector3[] newNormals = hasNormal ? new Vector3[arrayLen] : null;
+            Vector4[] newTangents = hasTangent ? new Vector4[arrayLen] : null;
 
 			// each index refers to our submesh triangles
 			List<int[]> triangles = new List<int[]>(submeshCount);
@@ -207,13 +262,31 @@ namespace EzySlice {
 					int i1 = vIndex + 1;
 					int i2 = vIndex + 2;
 
+                    // add the vertices
 					newVertices[i0] = newTri.positionA;
 					newVertices[i1] = newTri.positionB;
 					newVertices[i2] = newTri.positionC;
 
-					newUvs[i0] = newTri.uvA;
-					newUvs[i1] = newTri.uvB;
-					newUvs[i2] = newTri.uvC;
+                    // add the UV coordinates if any
+                    if (hasUV) {
+                        newUvs[i0] = newTri.uvA;
+                        newUvs[i1] = newTri.uvB;
+                        newUvs[i2] = newTri.uvC;
+                    }
+
+                    // add the Normals if any
+                    if (hasNormal) {
+                        newNormals[i0] = newTri.normalA;
+                        newNormals[i1] = newTri.normalB;
+                        newNormals[i2] = newTri.normalC;
+                    }
+
+                    // add the Tangents if any
+                    if (hasTangent) {
+                        newTangents[i0] = newTri.tangentA;
+                        newTangents[i1] = newTri.tangentB;
+                        newTangents[i2] = newTri.tangentC;
+                    }
 
 					// triangles are returned in clocwise order from the
 					// intersector, no need to sort these
@@ -239,13 +312,39 @@ namespace EzySlice {
 					int i1 = vIndex + 1;
 					int i2 = vIndex + 2;
 
+                    // add the vertices
 					newVertices[i0] = newTri.positionA;
 					newVertices[i1] = newTri.positionB;
 					newVertices[i2] = newTri.positionC;
 
-					newUvs[i0] = newTri.uvA;
-					newUvs[i1] = newTri.uvB;
-					newUvs[i2] = newTri.uvC;
+                    // add the UV coordinates if any
+                    if (hasUV) {
+                        newUvs[i0] = newTri.uvA;
+                        newUvs[i1] = newTri.uvB;
+                        newUvs[i2] = newTri.uvC;
+                    }
+
+                    // add the Normals if any
+                    if (hasNormal) {
+                        // invert the normals dependiong on upper or lower hull
+                        if (isUpper) {
+                            newNormals[i0] = -newTri.normalA;
+                            newNormals[i1] = -newTri.normalB;
+                            newNormals[i2] = -newTri.normalC;
+                        }
+                        else {
+                            newNormals[i0] = newTri.normalA;
+                            newNormals[i1] = newTri.normalB;
+                            newNormals[i2] = newTri.normalC;
+                        }
+                    }
+
+                    // add the Tangents if any
+                    if (hasTangent) {
+                        newTangents[i0] = newTri.tangentA;
+                        newTangents[i1] = newTri.tangentB;
+                        newTangents[i2] = newTri.tangentC;
+                    }
 
 					// add triangles in clockwise for upper
 					// and reversed for lower hulls, to ensure the mesh
@@ -273,14 +372,23 @@ namespace EzySlice {
 			newMesh.subMeshCount = totalTriangles;
 			// fill the mesh structure
 			newMesh.vertices = newVertices;
-			newMesh.uv = newUvs;
+
+            if (hasUV) {
+                newMesh.uv = newUvs;
+            }
+
+            if (hasNormal) {
+                newMesh.normals = newNormals;
+            }
+
+            if (hasTangent) {
+                newMesh.tangents = newTangents;
+            }
 
 			// add the submeshes
 			for (int i = 0; i < totalTriangles; i++) {
 				newMesh.SetTriangles(triangles[i], i, false);
 			}
-
-            newMesh.RecalculateNormals();
 
 			return newMesh;
 		}
