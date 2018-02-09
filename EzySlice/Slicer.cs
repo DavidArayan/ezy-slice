@@ -18,7 +18,8 @@ namespace EzySlice {
              */
             public bool hasUV {
                 get {
-                    return upperHull[0].hasUV;
+                    // what is this abomination??
+                    return upperHull.Count > 0 ? upperHull[0].hasUV : lowerHull.Count > 0 ? lowerHull[0].hasUV : false;
                 }
             }
 
@@ -28,7 +29,8 @@ namespace EzySlice {
              */
             public bool hasNormal {
                 get {
-                    return upperHull[0].hasNormal;
+                    // what is this abomination??
+                    return upperHull.Count > 0 ? upperHull[0].hasNormal : lowerHull.Count > 0 ? lowerHull[0].hasNormal : false;
                 }
             }
 
@@ -38,7 +40,8 @@ namespace EzySlice {
              */
             public bool hasTangent {
                 get {
-                    return upperHull[0].hasTangent;
+                    // what is this abomination??
+                    return upperHull.Count > 0 ? upperHull[0].hasTangent : lowerHull.Count > 0 ? lowerHull[0].hasTangent : false;
                 }
             }
 		}
