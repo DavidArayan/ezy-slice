@@ -86,12 +86,6 @@ namespace EzySlice {
 				return;
 			}
 
-			// the UV coordinates of all the vertices, this will be used to re-calculate the
-			// UV coordinates for the new intersection points.
-			Vector3 uva = tri.uvA;
-			Vector3 uvb = tri.uvB;
-			Vector3 uvc = tri.uvC;
-
 			// keep in mind that intersection points are shared by both
 			// the upper HULL and lower HULL hence they lie perfectly
 			// on the plane that cut them
@@ -105,17 +99,50 @@ namespace EzySlice {
 			if (sa == SideOfPlane.ON) {
 				// if the point a is on the plane, test line b-c
 				if (Intersector.Intersect(pl, b, c, out qa)) {
-					// the computed UV coordinate of the intersection point
-					Vector2 uvq = tri.GenerateUVCoords(qa);
+                    // line b-c intersected, construct out triangles and return approprietly
+                    result.AddIntersectionPoint(qa);
+                    result.AddIntersectionPoint(a);
 
-					// line b-c intersected, construct out triangles and return approprietly
-					result.AddIntersectionPoint(qa);
-					result.AddIntersectionPoint(a);
+                    // our two generated triangles, we need to figure out which
+                    // triangle goes into the UPPER hull and which goes into the LOWER hull
+                    Triangle ta = new Triangle(a, b, qa);
+                    Triangle tb = new Triangle(a, qa, c);
 
-					// our two generated triangles, we need to figure out which
-					// triangle goes into the UPPER hull and which goes into the LOWER hull
-					Triangle ta = new Triangle(a, b, qa, uva, uvb, uvq);
-					Triangle tb = new Triangle(a, qa, c, uva, uvq, uvc);
+                    // generate UV coordinates if there is any
+                    if (tri.hasUV) {
+                        // the computed UV coordinate if the intersection point
+                        Vector2 pq = tri.GenerateUV(qa);
+                        Vector2 pa = tri.uvA;
+                        Vector2 pb = tri.uvB;
+                        Vector2 pc = tri.uvC;
+
+                        ta.SetUV(pa, pb, pq);
+                        tb.SetUV(pa, pq, pc);
+                    }
+
+                    // generate Normal coordinates if there is any
+                    if (tri.hasNormal) {
+                        // the computed Normal coordinate if the intersection point
+                        Vector3 pq = tri.GenerateNormal(qa);
+                        Vector3 pa = tri.normalA;
+                        Vector3 pb = tri.normalB;
+                        Vector3 pc = tri.normalC;
+
+                        ta.SetNormal(pa, pb, pq);
+                        tb.SetNormal(pa, pq, pc);
+                    }
+
+                    // generate Tangent coordinates if there is any
+                    if (tri.hasTangent) {
+                        // the computed Tangent coordinate if the intersection point
+                        Vector4 pq = tri.GenerateTangent(qa);
+                        Vector4 pa = tri.tangentA;
+                        Vector4 pb = tri.tangentB;
+                        Vector4 pc = tri.tangentC;
+
+                        ta.SetTangent(pa, pb, pq);
+                        tb.SetTangent(pa, pq, pc);
+                    }
 
 					// b point lies on the upside of the plane
 					if (sb == SideOfPlane.UP) {
@@ -133,17 +160,50 @@ namespace EzySlice {
 			else if (sb == SideOfPlane.ON) {
 				// if the point b is on the plane, test line a-c
 				if (Intersector.Intersect(pl, a, c, out qa)) {
-					// the computed UV coordinate of the intersection point
-					Vector2 uvq = tri.GenerateUVCoords(qa);
-
 					// line a-c intersected, construct out triangles and return approprietly
 					result.AddIntersectionPoint(qa);
 					result.AddIntersectionPoint(b);
 
 					// our two generated triangles, we need to figure out which
 					// triangle goes into the UPPER hull and which goes into the LOWER hull
-					Triangle ta = new Triangle(a, b, qa, uva, uvb, uvq);
-					Triangle tb = new Triangle(qa, b, c, uvq, uvb, uvc);
+					Triangle ta = new Triangle(a, b, qa);
+					Triangle tb = new Triangle(qa, b, c);
+
+                    // generate UV coordinates if there is any
+                    if (tri.hasUV) {
+                        // the computed UV coordinate if the intersection point
+                        Vector2 pq = tri.GenerateUV(qa);
+                        Vector2 pa = tri.uvA;
+                        Vector2 pb = tri.uvB;
+                        Vector2 pc = tri.uvC;
+
+                        ta.SetUV(pa, pb, pq);
+                        tb.SetUV(pq, pb, pc);
+                    }
+
+                    // generate Normal coordinates if there is any
+                    if (tri.hasNormal) {
+                        // the computed Normal coordinate if the intersection point
+                        Vector3 pq = tri.GenerateNormal(qa);
+                        Vector3 pa = tri.normalA;
+                        Vector3 pb = tri.normalB;
+                        Vector3 pc = tri.normalC;
+
+                        ta.SetNormal(pa, pb, pq);
+                        tb.SetNormal(pq, pb, pc);
+                    }
+
+                    // generate Tangent coordinates if there is any
+                    if (tri.hasTangent) {
+                        // the computed Tangent coordinate if the intersection point
+                        Vector4 pq = tri.GenerateTangent(qa);
+                        Vector4 pa = tri.tangentA;
+                        Vector4 pb = tri.tangentB;
+                        Vector4 pc = tri.tangentC;
+
+                        ta.SetTangent(pa, pb, pq);
+                        tb.SetTangent(pq, pb, pc);
+                    }
 
 					// a point lies on the upside of the plane
 					if (sa == SideOfPlane.UP) {
@@ -161,17 +221,50 @@ namespace EzySlice {
 			else if (sc == SideOfPlane.ON) {
 				// if the point c is on the plane, test line a-b
 				if (Intersector.Intersect(pl, a, b, out qa)) {
-					// the computed UV coordinate of the intersection point
-					Vector2 uvq = tri.GenerateUVCoords(qa);
-
 					// line a-c intersected, construct out triangles and return approprietly
 					result.AddIntersectionPoint(qa);
 					result.AddIntersectionPoint(c);
 
 					// our two generated triangles, we need to figure out which
 					// triangle goes into the UPPER hull and which goes into the LOWER hull
-					Triangle ta = new Triangle(a, qa, c, uva, uvq, uvc);
-					Triangle tb = new Triangle(qa, b, c, uvq, uvb, uvc);
+					Triangle ta = new Triangle(a, qa, c);
+					Triangle tb = new Triangle(qa, b, c);
+
+                    // generate UV coordinates if there is any
+                    if (tri.hasUV) {
+                        // the computed UV coordinate if the intersection point
+                        Vector2 pq = tri.GenerateUV(qa);
+                        Vector2 pa = tri.uvA;
+                        Vector2 pb = tri.uvB;
+                        Vector2 pc = tri.uvC;
+
+                        ta.SetUV(pa, pq, pc);
+                        tb.SetUV(pq, pb, pc);
+                    }
+
+                    // generate Normal coordinates if there is any
+                    if (tri.hasNormal) {
+                        // the computed Normal coordinate if the intersection point
+                        Vector3 pq = tri.GenerateNormal(qa);
+                        Vector3 pa = tri.normalA;
+                        Vector3 pb = tri.normalB;
+                        Vector3 pc = tri.normalC;
+
+                        ta.SetNormal(pa, pq, pc);
+                        tb.SetNormal(pq, pb, pc);
+                    }
+
+                    // generate Tangent coordinates if there is any
+                    if (tri.hasTangent) {
+                        // the computed Tangent coordinate if the intersection point
+                        Vector4 pq = tri.GenerateTangent(qa);
+                        Vector4 pa = tri.tangentA;
+                        Vector4 pb = tri.tangentB;
+                        Vector4 pc = tri.tangentC;
+
+                        ta.SetTangent(pa, pq, pc);
+                        tb.SetTangent(pq, pb, pc);
+                    }
 
 					// a point lies on the upside of the plane
 					if (sa == SideOfPlane.UP) {
@@ -189,9 +282,6 @@ namespace EzySlice {
 			// full intersection tests against the lines. From this point onwards we will generate
 			// 3 triangles
 			else if (sa != sb && Intersector.Intersect(pl, a, b, out qa)) {
-				// the computed UV coordinate of the intersection point
-				Vector2 uvqa = tri.GenerateUVCoords(qa);
-
 				// intersection found against a - b
 				result.AddIntersectionPoint(qa);
 
@@ -202,16 +292,55 @@ namespace EzySlice {
 				if (sa == sc) {
 					// we likely have an intersection against line b-c which will complete this loop
 					if (Intersector.Intersect(pl, b, c, out qb)) {
-						// the computed UV coordinate of the intersection point
-						Vector2 uvqb = tri.GenerateUVCoords(qb);
-
-						result.AddIntersectionPoint(qb);
+                        result.AddIntersectionPoint(qb);
 
 						// our three generated triangles. Two of these triangles will end
 						// up on either the UPPER or LOWER hulls.
-						Triangle ta = new Triangle(qa, b, qb, uvqa, uvb, uvqb);
-						Triangle tb = new Triangle(a, qa, qb, uva, uvqa, uvqb);
-						Triangle tc = new Triangle(a, qb, c, uva, uvqb, uvc);
+						Triangle ta = new Triangle(qa, b, qb);
+						Triangle tb = new Triangle(a, qa, qb);
+						Triangle tc = new Triangle(a, qb, c);
+
+                        // generate UV coordinates if there is any
+                        if (tri.hasUV) {
+                            // the computed UV coordinate if the intersection point
+                            Vector2 pqa = tri.GenerateUV(qa);
+                            Vector2 pqb = tri.GenerateUV(qb);
+                            Vector2 pa = tri.uvA;
+                            Vector2 pb = tri.uvB;
+                            Vector2 pc = tri.uvC;
+
+                            ta.SetUV(pqa, pb, pqb);
+                            tb.SetUV(pa, pqa, pqb);
+                            tc.SetUV(pa, pqb, pc);
+                        }
+
+                        // generate Normal coordinates if there is any
+                        if (tri.hasNormal) {
+                            // the computed Normal coordinate if the intersection point
+                            Vector3 pqa = tri.GenerateNormal(qa);
+                            Vector3 pqb = tri.GenerateNormal(qb);
+                            Vector3 pa = tri.normalA;
+                            Vector3 pb = tri.normalB;
+                            Vector3 pc = tri.normalC;
+
+                            ta.SetNormal(pqa, pb, pqb);
+                            tb.SetNormal(pa, pqa, pqb);
+                            tc.SetNormal(pa, pqb, pc);
+                        }
+
+                        // generate Tangent coordinates if there is any
+                        if (tri.hasTangent) {
+                            // the computed Tangent coordinate if the intersection point
+                            Vector4 pqa = tri.GenerateTangent(qa);
+                            Vector4 pqb = tri.GenerateTangent(qb);
+                            Vector4 pa = tri.tangentA;
+                            Vector4 pb = tri.tangentB;
+                            Vector4 pc = tri.tangentC;
+
+                            ta.SetTangent(pqa, pb, pqb);
+                            tb.SetTangent(pa, pqa, pqb);
+                            tc.SetTangent(pa, pqb, pc);
+                        }
 
 						if (sa == SideOfPlane.UP) {
 							result.AddUpperHull(tb).AddUpperHull(tc).AddLowerHull(ta);
@@ -225,16 +354,55 @@ namespace EzySlice {
 					// in this scenario, the point a is a "lone" point which lies in either upper
 					// or lower HULL. We need to perform another intersection to find the last point
 					if (Intersector.Intersect(pl, a, c, out qb)) {
-						// the computed UV coordinate of the intersection point
-						Vector2 uvqb = tri.GenerateUVCoords(qb);
-
 						result.AddIntersectionPoint(qb);
 
 						// our three generated triangles. Two of these triangles will end
 						// up on either the UPPER or LOWER hulls.
-						Triangle ta = new Triangle(a, qa, qb, uva, uvqa, uvqb);
-						Triangle tb = new Triangle(qa, b, c, uvqa, uvb, uvc);
-						Triangle tc = new Triangle(qb, qa, c, uvqb, uvqa, uvc);
+						Triangle ta = new Triangle(a, qa, qb);
+						Triangle tb = new Triangle(qa, b, c);
+						Triangle tc = new Triangle(qb, qa, c);
+
+                        // generate UV coordinates if there is any
+                        if (tri.hasUV) {
+                            // the computed UV coordinate if the intersection point
+                            Vector2 pqa = tri.GenerateUV(qa);
+                            Vector2 pqb = tri.GenerateUV(qb);
+                            Vector2 pa = tri.uvA;
+                            Vector2 pb = tri.uvB;
+                            Vector2 pc = tri.uvC;
+
+                            ta.SetUV(pa, pqa, pqb);
+                            tb.SetUV(pqa, pb, pc);
+                            tc.SetUV(pqb, pqa, pc);
+                        }
+
+                        // generate Normal coordinates if there is any
+                        if (tri.hasNormal) {
+                            // the computed Normal coordinate if the intersection point
+                            Vector3 pqa = tri.GenerateNormal(qa);
+                            Vector3 pqb = tri.GenerateNormal(qb);
+                            Vector3 pa = tri.normalA;
+                            Vector3 pb = tri.normalB;
+                            Vector3 pc = tri.normalC;
+
+                            ta.SetNormal(pa, pqa, pqb);
+                            tb.SetNormal(pqa, pb, pc);
+                            tc.SetNormal(pqb, pqa, pc);
+                        }
+
+                        // generate Tangent coordinates if there is any
+                        if (tri.hasTangent) {
+                            // the computed Tangent coordinate if the intersection point
+                            Vector4 pqa = tri.GenerateTangent(qa);
+                            Vector4 pqb = tri.GenerateTangent(qb);
+                            Vector4 pa = tri.tangentA;
+                            Vector4 pb = tri.tangentB;
+                            Vector4 pc = tri.tangentC;
+
+                            ta.SetTangent(pa, pqa, pqb);
+                            tb.SetTangent(pqa, pb, pc);
+                            tc.SetTangent(pqb, pqa, pc);
+                        }
 
 						if (sa == SideOfPlane.UP) {
 							result.AddUpperHull(ta).AddLowerHull(tb).AddLowerHull(tc);
@@ -255,17 +423,57 @@ namespace EzySlice {
 				// in here we know that line a-b actually lie on the same side of the plane, this will
 				// simplify the rest of the logic. We also have our intersection points
 				// the computed UV coordinate of the intersection point
-				Vector2 uvqa = tri.GenerateUVCoords(qa);
-				Vector2 uvqb = tri.GenerateUVCoords(qb);
 
 				result.AddIntersectionPoint(qa);
 				result.AddIntersectionPoint(qb);
 
 				// our three generated triangles. Two of these triangles will end
 				// up on either the UPPER or LOWER hulls.
-				Triangle ta = new Triangle(qa, qb, c, uvqa, uvqb, uvc);
-				Triangle tb = new Triangle(a, qb, qa, uva, uvqb, uvqa);
-				Triangle tc = new Triangle(a, b, qb, uva, uvb, uvqb);
+				Triangle ta = new Triangle(qa, qb, c);
+				Triangle tb = new Triangle(a, qb, qa);
+				Triangle tc = new Triangle(a, b, qb);
+
+                // generate UV coordinates if there is any
+                if (tri.hasUV) {
+                    // the computed UV coordinate if the intersection point
+                    Vector2 pqa = tri.GenerateUV(qa);
+                    Vector2 pqb = tri.GenerateUV(qb);
+                    Vector2 pa = tri.uvA;
+                    Vector2 pb = tri.uvB;
+                    Vector2 pc = tri.uvC;
+
+                    ta.SetUV(pqa, pqb, pc);
+                    tb.SetUV(pa, pqb, pqa);
+                    tc.SetUV(pa, pb, pqb);
+                }
+
+                // generate Normal coordinates if there is any
+                if (tri.hasNormal) {
+                    // the computed Normal coordinate if the intersection point
+                    Vector3 pqa = tri.GenerateNormal(qa);
+                    Vector3 pqb = tri.GenerateNormal(qb);
+                    Vector3 pa = tri.normalA;
+                    Vector3 pb = tri.normalB;
+                    Vector3 pc = tri.normalC;
+
+                    ta.SetNormal(pqa, pqb, pc);
+                    tb.SetNormal(pa, pqb, pqa);
+                    tc.SetNormal(pa, pb, pqb);
+                }
+
+                // generate Tangent coordinates if there is any
+                if (tri.hasTangent) {
+                    // the computed Tangent coordinate if the intersection point
+                    Vector4 pqa = tri.GenerateTangent(qa);
+                    Vector4 pqb = tri.GenerateTangent(qb);
+                    Vector4 pa = tri.tangentA;
+                    Vector4 pb = tri.tangentB;
+                    Vector4 pc = tri.tangentC;
+
+                    ta.SetTangent(pqa, pqb, pc);
+                    tb.SetTangent(pa, pqb, pqa);
+                    tc.SetTangent(pa, pb, pqb);
+                }
 
 				if (sa == SideOfPlane.UP) {
 					result.AddUpperHull(tb).AddUpperHull(tc).AddLowerHull(ta);

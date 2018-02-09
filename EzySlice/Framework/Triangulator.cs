@@ -252,7 +252,15 @@ namespace EzySlice {
 				uvC.x = (uvC.x / maxDiv) * 0.5f;
 				uvC.y = (uvC.y / maxDiv) * 0.5f;
 
-				tri.Add(new Triangle(posA.originalValue, posB.originalValue, posC.originalValue, uvA, uvB, uvC));
+                Triangle newTriangle = new Triangle(posA.originalValue, posB.originalValue, posC.originalValue);
+
+                newTriangle.SetUV(uvA, uvB, uvC);
+
+                // the normals is the same for all vertices since the final mesh is completly flat
+                newTriangle.SetNormal(normal, normal, normal);
+                //newTriangle.ComputeTangents();
+
+                tri.Add(newTriangle);
 
 				indexCount++;
 			}
