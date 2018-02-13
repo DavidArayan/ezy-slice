@@ -8,41 +8,20 @@ namespace EzySlice {
 		/**
 		 * An internal class for storing internal submesh values
 		 */ 
-		internal class SlicedSubmesh {
+		internal sealed class SlicedSubmesh {
 			public readonly List<Triangle> upperHull = new List<Triangle>();
 			public readonly List<Triangle> lowerHull = new List<Triangle>();
 
-            /**
-             * Check if the submesh has had any UV's added.
-             * NOTE -> This should be supported properly
-             */
-            public bool hasUV {
-                get {
-                    // what is this abomination??
-                    return upperHull.Count > 0 ? upperHull[0].hasUV : lowerHull.Count > 0 ? lowerHull[0].hasUV : false;
-                }
-            }
+            // some helper variables to check if this slice
+            // has these parameters set
+            public readonly bool hasUV;
+            public readonly bool hasNormal;
+            public readonly bool hasTangent;
 
-            /**
-             * Check if the submesh has had any Normals added.
-             * NOTE -> This should be supported properly
-             */
-            public bool hasNormal {
-                get {
-                    // what is this abomination??
-                    return upperHull.Count > 0 ? upperHull[0].hasNormal : lowerHull.Count > 0 ? lowerHull[0].hasNormal : false;
-                }
-            }
-
-            /**
-             * Check if the submesh has had any Tangents added.
-             * NOTE -> This should be supported properly
-             */
-            public bool hasTangent {
-                get {
-                    // what is this abomination??
-                    return upperHull.Count > 0 ? upperHull[0].hasTangent : lowerHull.Count > 0 ? lowerHull[0].hasTangent : false;
-                }
+            public SlicedSubmesh(bool hasUV, bool hasNormal, bool hasTangent) {
+                this.hasUV = hasUV;
+                this.hasNormal = hasNormal;
+                this.hasTangent = hasTangent;
             }
 		}
 
@@ -134,7 +113,7 @@ namespace EzySlice {
 				int[] indices = sharedMesh.GetTriangles(submesh);
 				int indicesCount = indices.Length;
 
-				SlicedSubmesh mesh = new SlicedSubmesh();
+                SlicedSubmesh mesh = new SlicedSubmesh(genUV, genNorm, genTan);
 
 				// loop through all the mesh vertices, generating upper and lower hulls
 				// and all intersection points
@@ -212,6 +191,12 @@ namespace EzySlice {
 				upperHullCount += meshes[submesh].upperHull.Count;
 				lowerHullCount += meshes[submesh].lowerHull.Count;
 			}
+
+            // if either the upper or lower hulls have nothing, then the slicer failed
+            // and didn't actually cut anything, return null in this case
+            if (upperHullCount == 0 || lowerHullCount == 0) {
+                return null;
+            }
 
 			Mesh upperHull = CreateHull(meshes, upperHullCount, cross, true);
 			Mesh lowerHull = CreateHull(meshes, lowerHullCount, cross, false);

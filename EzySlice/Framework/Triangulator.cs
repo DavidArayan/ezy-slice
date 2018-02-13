@@ -57,8 +57,8 @@ namespace EzySlice {
             int[] next = new int[count];
 
             // TO-DO, calculate the UV Coordinates
-            float maxDivX = 0.0f;
-            float maxDivY = 0.0f;
+            //float maxDivX = 0.0f;
+            //float maxDivY = 0.0f;
 
             // build our linked list
             for (int i = 0; i < count; i++) {
