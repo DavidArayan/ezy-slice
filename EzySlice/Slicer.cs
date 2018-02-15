@@ -33,7 +33,7 @@ namespace EzySlice {
 		 * This function will return null if the object failed to slice
 		 */
 		public static GameObject[] SliceInstantiate(GameObject obj, Plane pl, bool genCrossSection = true) {
-			SlicedHull slice = Slice(obj, pl, genCrossSection);
+			SlicedHull slice = Slice(obj, pl);
 
 			if (slice == null) {
 				return null;
@@ -65,7 +65,7 @@ namespace EzySlice {
 		 * approprietly before the slice occurs
 		 * See -> Slice(Mesh, Plane) for more info
 		 */
-		public static SlicedHull Slice(GameObject obj, Plane pl, bool genCrossSection = true) {
+		public static SlicedHull Slice(GameObject obj, Plane pl) {
 			MeshFilter renderer = obj.GetComponent<MeshFilter>();
 
 			if (renderer == null) {
@@ -74,6 +74,16 @@ namespace EzySlice {
 
 			return Slice(renderer.sharedMesh, pl);
 		}
+
+        public static SlicedHull SliceThreaded(GameObject obj, Plane pl) {
+            MeshFilter renderer = obj.GetComponent<MeshFilter>();
+
+            if (renderer == null) {
+                return null;
+            }
+
+            return SliceThreaded(renderer.sharedMesh, pl);
+        }
 
         /**
          * WARNING -> Experimental API to try and accelerate the slicing process via
