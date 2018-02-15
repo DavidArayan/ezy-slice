@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Threading;
 
 namespace EzySlice {
 	public sealed class Slicer {
@@ -71,8 +72,148 @@ namespace EzySlice {
 				return null;
 			}
 
-			return Slice(renderer.sharedMesh, pl, genCrossSection);
+			return Slice(renderer.sharedMesh, pl);
 		}
+
+        /**
+         * WARNING -> Experimental API to try and accelerate the slicing process via
+         * multi-threading. API not finalised, further benchmarks is required.
+         * This is a copy of Slice() API with threading behind the scenes. This is a blocking
+         * API.
+         * 
+         * NOTE -> This API is likely to change in the future, do NOT rely on this since
+         * it may cause more problems than solve. For a proper multi-threaded slice, alot of
+         * the code will need to be re-written from scratch to account for the new structure, including
+         * pre-emptively creating objects on the main thread to accelerate threaded processes etc..
+         */
+        public static SlicedHull SliceThreaded(Mesh sharedMesh, Plane pl) {
+            if (sharedMesh == null) {
+                return null;
+            }
+
+            Vector3[] verts = sharedMesh.vertices;
+            Vector2[] uv = sharedMesh.uv;
+            Vector3[] norm = sharedMesh.normals;
+            Vector4[] tan = sharedMesh.tangents;
+
+            int submeshCount = sharedMesh.subMeshCount;
+
+            // each submesh will be sliced and placed in its own array structure
+            SlicedSubmesh[] slices = new SlicedSubmesh[submeshCount];
+            // the cross section hull is common across all submeshes
+            List<Vector3> crossHull = new List<Vector3>();
+
+            // see if we would like to split the mesh using uv, normals and tangents
+            bool genUV = verts.Length == uv.Length;
+            bool genNorm = verts.Length == norm.Length;
+            bool genTan = verts.Length == tan.Length;
+
+            // this will hold up the main thread until all threading jobs are completed
+            Semaphore latch = new Semaphore(0, submeshCount);
+
+            // iterate over all the submeshes individually. vertices and indices
+            // are all shared within the submesh
+            for (int submesh = 0; submesh < submeshCount; submesh++) {
+
+                // create our bucket
+                SlicedSubmesh mesh = new SlicedSubmesh(genUV, genNorm, genTan);
+                // register into the index
+                slices[submesh] = mesh;
+
+                int[] indices = sharedMesh.GetTriangles(submesh);
+
+                // each submesh will spawn a new threaded job
+                ThreadPool.Instance.Enqueue(
+                    () =>
+                    {
+                        // everything here is now completly threaded
+                        int indicesCount = indices.Length;
+
+                        IntersectionResult result = new IntersectionResult();
+
+                        // to avoid race conditions, the cross section will be added
+                        // as in a local array and then copied across to the main array
+                        // via a semaphore lock
+                        List<Vector3> childCrossHull = new List<Vector3>();
+
+                        // loop through all the mesh vertices, generating upper and lower hulls
+                        // and all intersection points
+                        for (int index = 0; index < indicesCount; index += 3) {
+                            int i0 = indices[index + 0];
+                            int i1 = indices[index + 1];
+                            int i2 = indices[index + 2];
+
+                            Triangle newTri = new Triangle(verts[i0], verts[i1], verts[i2]);
+
+                            // generate UV if available
+                            if (genUV) {
+                                newTri.SetUV(uv[i0], uv[i1], uv[i2]);
+                            }
+
+                            // generate normals if available
+                            if (genNorm) {
+                                newTri.SetNormal(norm[i0], norm[i1], norm[i2]);
+                            }
+
+                            // generate tangents if available
+                            if (genTan) {
+                                newTri.SetTangent(tan[i0], tan[i1], tan[i2]);
+                            }
+
+                            // slice this particular triangle with the provided
+                            // plane
+                            if (newTri.Split(pl, result)) {
+                                int upperHullCount = result.upperHullCount;
+                                int lowerHullCount = result.lowerHullCount;
+                                int interHullCount = result.intersectionPointCount;
+
+                                for (int i = 0; i < upperHullCount; i++) {
+                                    mesh.upperHull.Add(result.upperHull[i]);
+                                }
+
+                                for (int i = 0; i < lowerHullCount; i++) {
+                                    mesh.lowerHull.Add(result.lowerHull[i]);
+                                }
+
+                                for (int i = 0; i < interHullCount; i++) {
+                                    childCrossHull.Add(result.intersectionPoints[i]);
+                                }
+                            }
+                            else {
+                                SideOfPlane side = pl.SideOf(verts[i0]);
+
+                                if (side == SideOfPlane.UP || side == SideOfPlane.ON) {
+                                    mesh.upperHull.Add(newTri);
+                                }
+                                else {
+                                    mesh.lowerHull.Add(newTri);
+                                }
+                            }
+                        }
+
+                        // lock to avoid multiple threads writing into it
+                        lock (crossHull) {
+                            crossHull.AddRange(childCrossHull);
+                        }
+                    },
+                    () =>
+                    {
+                        // this will be called when the thread finishes its task
+                        // increment the latch to let the main application know that we
+                        // have finished
+                        latch.Release();
+                    }, false);
+            }
+
+            // ensure all processes have completed their operations
+            for (int submesh = 0; submesh < submeshCount; submesh++) {
+                latch.WaitOne();
+            }
+
+            // this process needs to be threaded aswell, will need to restructure
+            // the API first
+            return CreateFrom(slices, CreateFrom(crossHull, pl.normal));
+        }
 
 		/**
 		 * Slice the gameobject mesh (if any) using the Plane, which will generate
@@ -82,7 +223,7 @@ namespace EzySlice {
 		 * Returns null if no intersection has been found or the GameObject does not contain
 		 * a valid mesh to cut.
 		 */
-		public static SlicedHull Slice(Mesh sharedMesh, Plane pl, bool genCrossSection = true) {
+		public static SlicedHull Slice(Mesh sharedMesh, Plane pl) {
 			if (sharedMesh == null) {
 				return null;
 			}
