@@ -258,7 +258,7 @@ namespace EzySlice {
 
                 // the normals is the same for all vertices since the final mesh is completly flat
                 newTriangle.SetNormal(normal, normal, normal);
-                //newTriangle.ComputeTangents();
+                newTriangle.ComputeTangents();
 
                 tri.Add(newTriangle);
 

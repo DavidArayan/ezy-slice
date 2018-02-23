@@ -29,7 +29,7 @@ namespace EzySlice {
 			float t = (pl.dist - Vector3.Dot(normal, a)) / Vector3.Dot(normal, ab);
 
 			// need to be careful and compensate for floating errors
-			if (t >= -0.001f && t <= 1.001f) {
+            if (t >= -float.Epsilon && t <= (1 + float.Epsilon)) {
 				q = a + t * ab;
 
 				return true;
