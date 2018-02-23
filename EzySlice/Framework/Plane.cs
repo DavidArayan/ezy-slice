@@ -83,11 +83,11 @@ namespace EzySlice {
 		public SideOfPlane SideOf(Vector3 pt) {
 			float result = Vector3.Dot(m_normal, pt) - m_dist;
 
-			if (result > 0.001f) {
+            if (result > float.Epsilon) {
 				return SideOfPlane.UP;
 			}
 
-			if (result < 0.001f) {
+            if (result < float.Epsilon) {
 				return SideOfPlane.DOWN;
 			}
 
