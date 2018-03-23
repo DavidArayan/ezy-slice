@@ -1,28 +1,157 @@
 #### Open Source Slicer Framework for the Unity3D Game Engine
 
-* Ability to slice any convex/concave Mesh using a Plane
-* Generate cross section for the sliced Mesh with UV Coordinates (Convex only)
-* Re-Generates UV Coordinates for sliced Meshes for seamless blending between the original and sliced object
-* Recently updated for Unity3D 2017.2
-* MIT Open Source License
+* Ability to slice any convex Mesh using a Plane
+* UV/Normal/Tangent Space Interpolation for seamless cuts
+* Flexible and Documented API
 * No external plugin dependencies, fully written in C#
-* Contributions are always welcomed and appreciated!
+* Updated for Unity3D 2017
+* MIT Open Source License
 
 #### Algorithms in use
 
 * General purpose Monotone Chain for cross section triangulation for Convex slices
-* Barycentric Coordinates for re-generating new UV coordinates
+* Barycentric Coordinates for UV/Normal/Tangent space Interpolation 
 * Purpose built Triangle to Plane intersection to cover all general cases for slicing
 * Designed with performance in mind
 
-#### The future pipeline
+#### Contributions and Bug Reports
 
-* Add multi-threading support
-* Add ability to create cross sections for Concave object slices
-* Expand the api to provide greater flexibility and utility
-* Integrate with the Unity3D Editor
+* Contributions are always welcome and highly appreciated! please use pull request.
+* Bugs, Comments, General Enquiries and Feature Requests please use the Issue Tracker
 
 #### Example Projects
 
-* Visit https://github.com/DavidArayan/EzySlice-Example-Scenes for example/debug scenes using the Slicer Framework
+* Visit https://github.com/DavidArayan/EzySlice-Example-Scenes for example/debug scenes using the Slicer Framework. Example Repository is kept up to date with the latest changes on the main framework.
 * More Example Projects coming soon!
+
+#### Usage Examples
+
+Getting started with EzySlice is easy. Below you will find sample usage functions. EzySlice uses extension methods to hide most of the internal complexity.
+
+* The examples below will slice a GameObject and return SlicedHull object. SlicedHull has functionality for generating the final GameObjects for rendering. An additional API exists to generate the GameObjects automatically without any additional work required.
+* All functions will return null if slicing fails.
+
+##### SlicedHull Example
+
+```
+public GameObject objectToSlice; // non-null
+
+/**
+ * Example on how to slice a GameObject in world coordinates.
+ */
+public SlicedHull Slice(Vector3 planeWorldPosition, Vector3 planeWorldDirection) {
+	return objectToSlice.Slice(planeWorldPosition, planeWorldDirection);
+}
+```
+
+##### Direct Instantiated Example
+
+```
+public GameObject objectToSlice; // non-null
+
+/**
+ * Example on how to slice a GameObject in world coordinates.
+ */
+public GameObject[] Slice(Vector3 planeWorldPosition, Vector3 planeWorldDirection) {
+	return objectToSlice.SliceInstantiate(planeWorldPosition, planeWorldDirection);
+}
+```
+
+* A custom TextureRegion can be defined to map the final UV coordinates of the cross-section. TextureRegion is essentially a reference to a specific part of a texture in UV coordinate space. This can be useful if single materials are used repeatedly as atlasses.
+
+##### SlicedHull Example
+
+```
+public GameObject objectToSlice; // non-null
+
+/**
+ * Example on how to slice a GameObject in world coordinates.
+ * Uses a custom TextureRegion to offset the UV coordinates of the cross-section
+ */
+public SlicedHull Slice(Vector3 planeWorldPosition, Vector3 planeWorldDirection, TextureRegion region) {
+	return objectToSlice.Slice(planeWorldPosition, planeWorldDirection, region);
+}
+```
+
+##### Direct Instantiated Example
+
+```
+public GameObject objectToSlice; // non-null
+
+/**
+ * Example on how to slice a GameObject in world coordinates.
+ * Uses a custom TextureRegion to offset the UV coordinates of the cross-section
+ */
+public GameObject[] Slice(Vector3 planeWorldPosition, Vector3 planeWorldDirection, TextureRegion region) {
+	return objectToSlice.SliceInstantiate(planeWorldPosition, planeWorldDirection, region);
+}
+```
+
+* There are cases where supplying the material directly can have performance benefits. In the previous examples, the Slicer will simply create the cross section as a submesh which will allow adding the Material externally when the GameObject is created. By supplying the Material directly, this will allow the Slicer to potentially batch the final results instead of creating repeated submeshes.
+
+##### SlicedHull Example
+
+```
+public GameObject objectToSlice; // non-null
+public Material crossSectionMaterial; // non-null
+
+/**
+ * Example on how to slice a GameObject in world coordinates.
+ * Uses a custom TextureRegion to offset the UV coordinates of the cross-section
+ * Uses a custom Material
+ */
+public SlicedHull Slice(Vector3 planeWorldPosition, Vector3 planeWorldDirection, TextureRegion region) {
+	return objectToSlice.Slice(planeWorldPosition, planeWorldDirection, region, crossSectionMaterial);
+}
+```
+
+##### Direct Instantiated Example
+
+```
+public GameObject objectToSlice; // non-null
+public Material crossSectionMaterial; // non-null
+
+/**
+ * Example on how to slice a GameObject in world coordinates.
+ * Uses a custom TextureRegion to offset the UV coordinates of the cross-section
+ * Uses a custom Material
+ */
+public GameObject[] Slice(Vector3 planeWorldPosition, Vector3 planeWorldDirection, TextureRegion region) {
+	return objectToSlice.SliceInstantiate(planeWorldPosition, planeWorldDirection, region, crossSectionMaterial);
+}
+```
+
+* Below is a sample on how to generate a TextureRegion. TextureRegion is stored in UV Coordinate space and is a reference to a specific region of a texture.
+
+##### Using a Texture
+
+```
+/**
+ * Example on how to calculate a custom TextureRegion to reference a different part of a texture
+ * 
+ * px -> The start X Position in Pixel Coordinates
+ * py -> The start Y Position in Pixel Coordinates
+ * width -> The width of the texture in Pixel Coordinates
+ * height -> The height of the texture in Pixel Coordinates
+ */
+public TextureRegion CalculateCustomRegion(Texture myTexture, int px, int py, int width, int height) {
+	return myTexture.GetTextureRegion(px, py, width, height);
+}
+```
+
+##### Using a Material
+
+```
+/**
+ * Example on how to calculate a custom TextureRegion to reference a different part of a texture
+ * This example will use the mainTexture component of a Material
+ * 
+ * px -> The start X Position in Pixel Coordinates
+ * py -> The start Y Position in Pixel Coordinates
+ * width -> The width of the texture in Pixel Coordinates
+ * height -> The height of the texture in Pixel Coordinates
+ */
+public TextureRegion CalculateCustomRegion(Material myMaterial, int px, int py, int width, int height) {
+	return myMaterial.GetTextureRegion(px, py, width, height);
+}
+```

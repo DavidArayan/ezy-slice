@@ -11,15 +11,15 @@ namespace EzySlice {
 	 * via an optional indices array. Could lead for a faster
 	 * intersection test aswell.
 	 */
-	public class IntersectionResult {
+	public sealed class IntersectionResult {
 
 		// general tag to check if this structure is valid
 		private bool is_success;
 
 		// our intersection points/triangles
-		private Triangle[] upper_hull;
-		private Triangle[] lower_hull;
-		private Vector3[] intersection_pt;
+		private readonly Triangle[] upper_hull;
+		private readonly Triangle[] lower_hull;
+		private readonly Vector3[] intersection_pt;
 
 		// our counters. We use raw arrays for performance reasons
 		private int upper_hull_count;
@@ -108,8 +108,6 @@ namespace EzySlice {
 			intersection_pt_count = 0;
 		}
 
-		#if UNITY_EDITOR
-
 		/**
 		 * Editor only DEBUG functionality. This should not be compiled in the final
 		 * Version.
@@ -119,6 +117,8 @@ namespace EzySlice {
 		}
 
 		public void OnDebugDraw(Color drawColor) {
+            #if UNITY_EDITOR
+
 			if (!isValid) {
 				return;
 			}
@@ -143,8 +143,8 @@ namespace EzySlice {
 			}
 
 			Gizmos.color = prevColor;
-		}
 
-		#endif
+            #endif
+		}
 	}
 }

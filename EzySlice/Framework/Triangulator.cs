@@ -6,14 +6,14 @@ using UnityEngine;
 namespace EzySlice {
 
 	/**
-	 * TO/DO -> Rename this to Triangulator and deprecate the
-	 * older functionality
+	 * Contains static functionality for performing Triangulation on arbitrary vertices.
+	 * Read the individual function descriptions for specific details.
 	 */
 	public sealed class Triangulator {
 
 		/**
 		 * Represents a 3D Vertex which has been mapped onto a 2D surface
-		 * and is mainly used in MonotoeChain to triangulate a set of vertices
+		 * and is mainly used in MonotoneChain to triangulate a set of vertices
 		 * against a flat plane.
 		 */
 		internal struct Mapped2D {
@@ -34,13 +34,24 @@ namespace EzySlice {
 			}
 		}
 
+        /**
+         * Overloaded variant of MonotoneChain which will calculate UV coordinates of the Triangles
+         * between 0.0 and 1.0 (default).
+         * 
+         * See MonotoneChain(vertices, normal, tri, TextureRegion) for full explanation
+         */
+        public static bool MonotoneChain(List<Vector3> vertices, Vector3 normal, out List<Triangle> tri) {
+            // default texture region is in coordinates 0,0 to 1,1
+            return MonotoneChain(vertices, normal, out tri, new TextureRegion(0.0f, 0.0f, 1.0f, 1.0f));
+        }
+
 		/**
 		 * O(n log n) Convex Hull Algorithm. 
 		 * Accepts a list of vertices as Vector3 and triangulates them according to a projection
 		 * plane defined as planeNormal. Algorithm will output vertices, indices and UV coordinates
 		 * as arrays
 		 */
-		public static bool MonotoneChain(List<Vector3> vertices, Vector3 normal, out List<Triangle> tri) {
+        public static bool MonotoneChain(List<Vector3> vertices, Vector3 normal, out List<Triangle> tri, TextureRegion texRegion) {
 			int count = vertices.Count;
 
 			// we cannot triangulate less than 3 points. Use minimum of 3 points
@@ -70,8 +81,8 @@ namespace EzySlice {
 				Vector2 mapVal = newMappedValue.mappedValue;
 
 				// grab our maximal values so we can map UV's in a proper range
-				maxDivX = Mathf.Max(maxDivX, mapVal.x);
-				maxDivY = Mathf.Max(maxDivY, mapVal.y);
+                maxDivX = Mathf.Max(maxDivX, Mathf.Abs(mapVal.x));
+                maxDivY = Mathf.Max(maxDivY, Mathf.Abs(mapVal.y));
 
 				mapped[i] = newMappedValue;
 			}
@@ -165,7 +176,8 @@ namespace EzySlice {
 
                 Triangle newTriangle = new Triangle(posA.originalValue, posB.originalValue, posC.originalValue);
 
-                newTriangle.SetUV(uvA, uvB, uvC);
+                // ensure our UV coordinates are mapped into the requested TextureRegion
+                newTriangle.SetUV(texRegion.Map(uvA), texRegion.Map(uvB), texRegion.Map(uvC));
 
                 // the normals is the same for all vertices since the final mesh is completly flat
                 newTriangle.SetNormal(normal, normal, normal);

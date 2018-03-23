@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace EzySlice {
+    
+    /**
+     * Contains methods for slicing GameObjects
+     */
 	public sealed class Slicer {
 
 		/**
@@ -44,40 +48,16 @@ namespace EzySlice {
                     return upperHull.Count > 0 ? upperHull[0].hasTangent : lowerHull.Count > 0 ? lowerHull[0].hasTangent : false;
                 }
             }
-		}
 
-		/**
-		 * Helper function which will slice the provided object with the provided plane
-		 * and instantiate and return the final GameObjects
-		 * 
-		 * This function will return null if the object failed to slice
-		 */
-		public static GameObject[] SliceInstantiate(GameObject obj, Plane pl, bool genCrossSection = true) {
-			SlicedHull slice = Slice(obj, pl, genCrossSection);
-
-			if (slice == null) {
-				return null;
-			}
-
-            GameObject upperHull = slice.CreateUpperHull(obj);
-            GameObject lowerHull = slice.CreateLowerHull(obj);
-
-            if (upperHull != null && lowerHull != null) {
-                return new GameObject[] { upperHull, lowerHull };
+            /**
+             * Check if proper slicing has occured for this submesh. Slice occured if there
+             * are triangles in both the upper and lower hulls
+             */
+            public bool isValid {
+                get {
+                    return upperHull.Count > 0 && lowerHull.Count > 0;
+                }
             }
-
-            // otherwise return only the upper hull
-            if (upperHull != null) {
-                return new GameObject[] { upperHull };
-            }
-
-            // otherwise return only the lower hull
-            if (lowerHull != null) {
-                return new GameObject[] { lowerHull };
-            }
-
-            // nothing to return, so return nothing!
-            return null;
 		}
 
 		/**
@@ -85,14 +65,63 @@ namespace EzySlice {
 		 * approprietly before the slice occurs
 		 * See -> Slice(Mesh, Plane) for more info
 		 */
-		public static SlicedHull Slice(GameObject obj, Plane pl, bool genCrossSection = true) {
-			MeshFilter renderer = obj.GetComponent<MeshFilter>();
+        public static SlicedHull Slice(GameObject obj, Plane pl, TextureRegion crossRegion, Material crossMaterial) {
+			MeshFilter filter = obj.GetComponent<MeshFilter>();
 
-			if (renderer == null) {
-				return null;
-			}
+            // cannot continue without a proper filter
+            if (filter == null) {
+                Debug.LogWarning("EzySlice::Slice -> Provided GameObject must have a MeshFilter Component.");
 
-			return Slice(renderer.sharedMesh, pl, genCrossSection);
+                return null;
+            }
+
+            MeshRenderer renderer = obj.GetComponent<MeshRenderer>();
+
+            // cannot continue without a proper renderer
+            if (renderer == null) {
+                Debug.LogWarning("EzySlice::Slice -> Provided GameObject must have a MeshRenderer Component.");
+
+                return null;
+            }
+
+            Material[] materials = renderer.sharedMaterials;
+
+            Mesh mesh = filter.sharedMesh;
+
+            // cannot slice a mesh that doesn't exist
+            if (mesh == null) {
+                Debug.LogWarning("EzySlice::Slice -> Provided GameObject must have a Mesh that is not NULL.");
+
+                return null;
+            }
+
+            int submeshCount = mesh.subMeshCount;
+
+            // to make things straightforward, exit without slicing if the materials and mesh
+            // array don't match. This shouldn't happen anyway
+            if (materials.Length != submeshCount) {
+                Debug.LogWarning("EzySlice::Slice -> Provided Material array must match the length of submeshes.");
+
+                return null;
+            }
+
+            // we need to find the index of the material for the cross section.
+            // default to the end of the array
+            int crossIndex = materials.Length;
+
+            // for cases where the sliced material is null, we will append the cross section to the end
+            // of the submesh array, this is because the application may want to set/change the material
+            // after slicing has occured, so we don't assume anything
+            if (crossMaterial != null) {
+                for (int i = 0; i < crossIndex; i++) {
+                    if (materials[i] == crossMaterial) {
+                        crossIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            return Slice(mesh, pl, crossRegion, crossIndex);
 		}
 
 		/**
@@ -103,7 +132,7 @@ namespace EzySlice {
 		 * Returns null if no intersection has been found or the GameObject does not contain
 		 * a valid mesh to cut.
 		 */
-		public static SlicedHull Slice(Mesh sharedMesh, Plane pl, bool genCrossSection = true) {
+        public static SlicedHull Slice(Mesh sharedMesh, Plane pl, TextureRegion region, int crossIndex) {
 			if (sharedMesh == null) {
 				return null;
 			}
@@ -195,13 +224,23 @@ namespace EzySlice {
 				slices[submesh] = mesh;
 			}
 
-			return CreateFrom(slices, CreateFrom(crossHull, pl.normal));
+            // check if slicing actually occured
+            for (int i = 0; i < slices.Length; i++) {
+                // check if at least one of the submeshes was sliced. If so, stop checking
+                // because we need to go through the generation step
+                if (slices[i] != null && slices[i].isValid) {
+                    return CreateFrom(slices, CreateFrom(crossHull, pl.normal, region), crossIndex);
+                }
+            }
+
+            // no slicing occured, just return null to signify
+			return null;
 		}
 
 		/**
 		 * Generates a single SlicedHull from a set of cut submeshes 
 		 */
-		private static SlicedHull CreateFrom(SlicedSubmesh[] meshes, List<Triangle> cross) {
+		private static SlicedHull CreateFrom(SlicedSubmesh[] meshes, List<Triangle> cross, int crossSectionIndex) {
 			int submeshCount = meshes.Length;
 
 			int upperHullCount = 0;
@@ -213,16 +252,24 @@ namespace EzySlice {
 				lowerHullCount += meshes[submesh].lowerHull.Count;
 			}
 
-			Mesh upperHull = CreateHull(meshes, upperHullCount, cross, true);
-			Mesh lowerHull = CreateHull(meshes, lowerHullCount, cross, false);
+            Mesh upperHull = CreateUpperHull(meshes, upperHullCount, cross, crossSectionIndex);
+            Mesh lowerHull = CreateLowerHull(meshes, lowerHullCount, cross, crossSectionIndex);
 
 			return new SlicedHull(upperHull, lowerHull);
 		}
 
+        private static Mesh CreateUpperHull(SlicedSubmesh[] mesh, int total, List<Triangle> crossSection, int crossSectionIndex) {
+            return CreateHull(mesh, total, crossSection, crossSectionIndex, true);
+        }
+
+        private static Mesh CreateLowerHull(SlicedSubmesh[] mesh, int total, List<Triangle> crossSection, int crossSectionIndex) {
+            return CreateHull(mesh, total, crossSection, crossSectionIndex, false);
+        }
+
 		/**
 		 * Generate a single Mesh HULL of either the UPPER or LOWER hulls. 
 		 */
-		private static Mesh CreateHull(SlicedSubmesh[] meshes, int total, List<Triangle> crossSection, bool isUpper) {
+		private static Mesh CreateHull(SlicedSubmesh[] meshes, int total, List<Triangle> crossSection, int crossIndex, bool isUpper) {
 			if (total <= 0) {
 				return null;
 			}
@@ -367,7 +414,20 @@ namespace EzySlice {
 				}
 
 				// add triangles to the index for later generation
-				triangles.Add(crossIndices);
+                if (triangles.Count <= crossIndex) {
+                    triangles.Add(crossIndices);
+                }
+                else {
+                    // otherwise, we need to merge the triangles for the provided subsection
+                    int[] prevTriangles = triangles[crossIndex];
+                    int[] merged = new int[prevTriangles.Length + crossIndices.Length];
+
+                    System.Array.Copy(prevTriangles, merged, prevTriangles.Length);
+                    System.Array.Copy(crossIndices, 0, merged, prevTriangles.Length, crossIndices.Length);
+
+                    // replace the previous array with the new merged array
+                    triangles[crossIndex] = merged;
+                }
 			}
 
 			int totalTriangles = triangles.Count;
@@ -400,10 +460,10 @@ namespace EzySlice {
 		 * Generate Two Meshes (an upper and lower) cross section from a set of intersection
 		 * points and a plane normal. Intersection Points do not have to be in order.
 		 */
-		private static List<Triangle> CreateFrom(List<Vector3> intPoints, Vector3 planeNormal) {
+        private static List<Triangle> CreateFrom(List<Vector3> intPoints, Vector3 planeNormal, TextureRegion region) {
 			List<Triangle> tris;
 
-			if (Triangulator.MonotoneChain(intPoints, planeNormal, out tris)) {
+            if (Triangulator.MonotoneChain(intPoints, planeNormal, out tris, region)) {
 				return tris;
 			}
 

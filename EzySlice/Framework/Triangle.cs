@@ -314,7 +314,7 @@ namespace EzySlice {
 		 * Check the triangle winding order, if it's Clock Wise or Counter Clock Wise 
 		 */
 		public bool IsCW() {
-			return SignedSquare(m_pos_a, m_pos_b, m_pos_c) >= -0.001f;
+            return SignedSquare(m_pos_a, m_pos_b, m_pos_c) >= float.Epsilon;
 		}
 
 		/**
@@ -327,8 +327,6 @@ namespace EzySlice {
 					a.z * (b.x * c.y - b.y * c.x));
 		}
 
-		#if UNITY_EDITOR
-
 		/**
 		 * Editor only DEBUG functionality. This should not be compiled in the final
 		 * Version.
@@ -338,6 +336,7 @@ namespace EzySlice {
 		}
 
 		public void OnDebugDraw(Color drawColor) {
+            #if UNITY_EDITOR
 			Color prevColor = Gizmos.color;
 
 			Gizmos.color = drawColor;
@@ -347,8 +346,7 @@ namespace EzySlice {
 			Gizmos.DrawLine(positionC, positionA);
 
 			Gizmos.color = prevColor;
+            #endif
 		}
-
-		#endif
 	}
 }

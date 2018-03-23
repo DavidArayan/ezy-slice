@@ -1,2 +1,4 @@
 
 *.meta
+
+\.DS_Store
