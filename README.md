@@ -33,7 +33,7 @@ Getting started with EzySlice is easy. Below you will find sample usage function
 
 ##### SlicedHull Example
 
-```
+```C#
 public GameObject objectToSlice; // non-null
 
 /**
@@ -46,7 +46,7 @@ public SlicedHull Slice(Vector3 planeWorldPosition, Vector3 planeWorldDirection)
 
 ##### Direct Instantiated Example
 
-```
+```C#
 public GameObject objectToSlice; // non-null
 
 /**
@@ -61,7 +61,7 @@ public GameObject[] Slice(Vector3 planeWorldPosition, Vector3 planeWorldDirectio
 
 ##### SlicedHull Example
 
-```
+```C#
 public GameObject objectToSlice; // non-null
 
 /**
@@ -75,7 +75,7 @@ public SlicedHull Slice(Vector3 planeWorldPosition, Vector3 planeWorldDirection,
 
 ##### Direct Instantiated Example
 
-```
+```C#
 public GameObject objectToSlice; // non-null
 
 /**
@@ -91,7 +91,7 @@ public GameObject[] Slice(Vector3 planeWorldPosition, Vector3 planeWorldDirectio
 
 ##### SlicedHull Example
 
-```
+```C#
 public GameObject objectToSlice; // non-null
 public Material crossSectionMaterial; // non-null
 
@@ -107,7 +107,7 @@ public SlicedHull Slice(Vector3 planeWorldPosition, Vector3 planeWorldDirection,
 
 ##### Direct Instantiated Example
 
-```
+```C#
 public GameObject objectToSlice; // non-null
 public Material crossSectionMaterial; // non-null
 
@@ -125,7 +125,7 @@ public GameObject[] Slice(Vector3 planeWorldPosition, Vector3 planeWorldDirectio
 
 ##### Using a Texture
 
-```
+```C#
 /**
  * Example on how to calculate a custom TextureRegion to reference a different part of a texture
  * 
@@ -141,7 +141,7 @@ public TextureRegion CalculateCustomRegion(Texture myTexture, int px, int py, in
 
 ##### Using a Material
 
-```
+```C#
 /**
  * Example on how to calculate a custom TextureRegion to reference a different part of a texture
  * This example will use the mainTexture component of a Material
