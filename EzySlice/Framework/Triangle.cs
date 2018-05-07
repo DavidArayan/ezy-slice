@@ -305,7 +305,7 @@ namespace EzySlice {
 		 * Returns true on success or false otherwise
 		 */
 		public bool Split(Plane pl, IntersectionResult result) {
-			Intersector.Intersect(pl, this, ref result);
+			Intersector.Intersect(pl, this, result);
 
 			return result.isValid;
 		}

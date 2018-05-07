@@ -55,7 +55,7 @@ namespace EzySlice {
 		 * Results will be filled into the IntersectionResult reference. Check result.isValid()
 		 * for the final results.
 		 */
-		public static void Intersect(Plane pl, Triangle tri, ref IntersectionResult result) {
+		public static void Intersect(Plane pl, Triangle tri, IntersectionResult result) {
 			// clear the previous results from the IntersectionResult
 			result.Clear();
 
