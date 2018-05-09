@@ -1,3 +1,11 @@
+<h3 align="center">
+  <img src="icon.png?raw=true" alt="EzySlice Logo" width="500">
+</h3>
+
+[![Twitter: @DavidArayan](https://img.shields.io/badge/contact-@DavidArayan-blue.svg?style=flat)](https://twitter.com/DavidArayan)
+
+***
+
 #### Open Source Slicer Framework for the Unity3D Game Engine
 
 * Ability to slice any convex Mesh using a Plane
@@ -23,6 +31,8 @@
 
 * Visit https://github.com/DavidArayan/EzySlice-Example-Scenes for example/debug scenes using the Slicer Framework. Example Repository is kept up to date with the latest changes on the main framework.
 * More Example Projects coming soon!
+
+***
 
 #### Usage Examples
 
