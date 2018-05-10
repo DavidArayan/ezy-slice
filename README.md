@@ -2,7 +2,8 @@
   <img src="icon.png?raw=true" alt="EzySlice Logo" width="500">
 </h3>
 
-[![Twitter: @DavidArayan](https://img.shields.io/badge/contact-@DavidArayan-blue.svg?style=flat)](https://twitter.com/DavidArayan)
+[![Twitter: @DavidArayan](https://img.shields.io/badge/contact-DavidArayan-blue.svg?style=flat)](https://twitter.com/DavidArayan)
+[![Join the chat at https://gitter.im/ezyframeworks/ezyslice](https://img.shields.io/badge/chat-gitter/ezyslice-green.svg?style=flat)](https://gitter.im/ezyframeworks/ezyslice)
 
 ***
 
