@@ -1,5 +1,5 @@
 <h3 align="center">
-  <img src="icon.png?raw=true" alt="EzySlice Logo" width="500">
+  <img src="Graphics/icon.png?raw=true" alt="EzySlice Logo" width="600">
 </h3>
 
 [![Twitter: @DavidArayan](https://img.shields.io/badge/contact-DavidArayan-blue.svg?style=flat)](https://twitter.com/DavidArayan)
@@ -13,7 +13,7 @@
 * UV/Normal/Tangent Space Interpolation for seamless cuts
 * Flexible and Documented API
 * No external plugin dependencies, fully written in C#
-* Updated for Unity3D 2017
+* Updated for Unity3D 2018
 * MIT Open Source License
 
 #### Algorithms in use
