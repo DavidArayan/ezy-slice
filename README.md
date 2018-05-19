@@ -14,7 +14,7 @@
 * Flexible and Documented API
 * No external plugin dependencies, fully written in C#
 * Updated for Unity3D 2018
-* MIT Open Source License
+* MIT Open Source [License](LICENSE)
 
 #### Algorithms in use
 
