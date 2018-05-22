@@ -34,16 +34,16 @@ namespace EzySlice {
 			}
 		}
 
-        /**
-         * Overloaded variant of MonotoneChain which will calculate UV coordinates of the Triangles
-         * between 0.0 and 1.0 (default).
-         * 
-         * See MonotoneChain(vertices, normal, tri, TextureRegion) for full explanation
-         */
-        public static bool MonotoneChain(List<Vector3> vertices, Vector3 normal, out List<Triangle> tri) {
-            // default texture region is in coordinates 0,0 to 1,1
-            return MonotoneChain(vertices, normal, out tri, new TextureRegion(0.0f, 0.0f, 1.0f, 1.0f));
-        }
+		/**
+		 * Overloaded variant of MonotoneChain which will calculate UV coordinates of the Triangles
+		 * between 0.0 and 1.0 (default).
+		 * 
+		 * See MonotoneChain(vertices, normal, tri, TextureRegion) for full explanation
+		 */
+		public static bool MonotoneChain(List<Vector3> vertices, Vector3 normal, out List<Triangle> tri) {
+			// default texture region is in coordinates 0,0 to 1,1
+			return MonotoneChain(vertices, normal, out tri, new TextureRegion(0.0f, 0.0f, 1.0f, 1.0f));
+		}
 
 		/**
 		 * O(n log n) Convex Hull Algorithm. 
@@ -51,7 +51,7 @@ namespace EzySlice {
 		 * plane defined as planeNormal. Algorithm will output vertices, indices and UV coordinates
 		 * as arrays
 		 */
-        public static bool MonotoneChain(List<Vector3> vertices, Vector3 normal, out List<Triangle> tri, TextureRegion texRegion) {
+		public static bool MonotoneChain(List<Vector3> vertices, Vector3 normal, out List<Triangle> tri, TextureRegion texRegion) {
 			int count = vertices.Count;
 
 			// we cannot triangulate less than 3 points. Use minimum of 3 points
@@ -61,17 +61,21 @@ namespace EzySlice {
 			}
 
 			// first, we map from 3D points into a 2D plane represented by the provided normal
-			Vector3 r = Mathf.Abs(normal.x) > Mathf.Abs(normal.y) ? new Vector3(0, 1, 0) : new Vector3(1, 0, 0);
-
-			Vector3 v = Vector3.Normalize(Vector3.Cross(r, normal));
-			Vector3 u = Vector3.Cross(normal, v);
+			Vector3 u = Vector3.Normalize(Vector3.Cross(normal, Vector3.up));
+			if ( Vector3.zero == u)
+			{
+				u = Vector3.Normalize(Vector3.Cross(normal, Vector3.forward));
+			}
+			Vector3 v = Vector3.Cross(u, normal);
 
 			// generate an array of mapped values
 			Mapped2D[] mapped = new Mapped2D[count];
 
 			// these values will be used to generate new UV coordinates later on
-			float maxDivX = 0.0f;
-			float maxDivY = 0.0f;
+			float maxDivX = float.MinValue;
+			float maxDivY = float.MinValue;
+			float minDivX = float.MaxValue;
+			float minDivY = float.MaxValue;
 
 			// map the 3D vertices into the 2D mapped values
 			for (int i = 0; i < count; i++) {
@@ -81,8 +85,10 @@ namespace EzySlice {
 				Vector2 mapVal = newMappedValue.mappedValue;
 
 				// grab our maximal values so we can map UV's in a proper range
-                maxDivX = Mathf.Max(maxDivX, Mathf.Abs(mapVal.x));
-                maxDivY = Mathf.Max(maxDivY, Mathf.Abs(mapVal.y));
+				maxDivX = Mathf.Max(maxDivX, mapVal.x);
+				maxDivY = Mathf.Max(maxDivY, mapVal.y);
+				minDivX = Mathf.Min(minDivX, mapVal.x);
+				minDivY = Mathf.Min(minDivY, mapVal.y);
 
 				mapped[i] = newMappedValue;
 			}
@@ -151,6 +157,9 @@ namespace EzySlice {
 
 			float maxDiv = Mathf.Max(maxDivX, maxDivY);
 
+			float width = maxDivX - minDivX;
+			float height = maxDivY - minDivY;
+
 			int indexCount = 1;
 
 			// generate both the vertices and uv's in this loop
@@ -165,25 +174,25 @@ namespace EzySlice {
 				Vector2 uvB = posB.mappedValue;
 				Vector2 uvC = posC.mappedValue;
 
-				uvA.x = (uvA.x / maxDiv) * 0.5f;
-				uvA.y = (uvA.y / maxDiv) * 0.5f;
+				uvA.x = (uvA.x - minDivX) / width;
+				uvA.y = (uvA.y - minDivY) / height;
 
-				uvB.x = (uvB.x / maxDiv) * 0.5f;
-				uvB.y = (uvB.y / maxDiv) * 0.5f;
+				uvB.x = (uvB.x - minDivX) / width;
+				uvB.y = (uvB.y - minDivY) / height;
 
-				uvC.x = (uvC.x / maxDiv) * 0.5f;
-				uvC.y = (uvC.y / maxDiv) * 0.5f;
+				uvC.x = (uvC.x - minDivX) / width;
+				uvC.y = (uvC.y - minDivY) / height;
 
-                Triangle newTriangle = new Triangle(posA.originalValue, posB.originalValue, posC.originalValue);
+				Triangle newTriangle = new Triangle(posA.originalValue, posB.originalValue, posC.originalValue);
 
-                // ensure our UV coordinates are mapped into the requested TextureRegion
-                newTriangle.SetUV(texRegion.Map(uvA), texRegion.Map(uvB), texRegion.Map(uvC));
+				// ensure our UV coordinates are mapped into the requested TextureRegion
+				newTriangle.SetUV(texRegion.Map(uvA), texRegion.Map(uvB), texRegion.Map(uvC));
 
-                // the normals is the same for all vertices since the final mesh is completly flat
-                newTriangle.SetNormal(normal, normal, normal);
-                newTriangle.ComputeTangents();
+				// the normals is the same for all vertices since the final mesh is completly flat
+				newTriangle.SetNormal(normal, normal, normal);
+				newTriangle.ComputeTangents();
 
-                tri.Add(newTriangle);
+				tri.Add(newTriangle);
 
 				indexCount++;
 			}
