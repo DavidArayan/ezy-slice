@@ -105,10 +105,10 @@ namespace EzySlice {
             int calcX = Mathf.Min(Mathf.Abs(pixX), textureWidth);
             int calcY = Mathf.Min(Mathf.Abs(pixY), textureHeight);
 
-            float startX = calcX / textureWidth;
-            float startY = calcY / textureHeight;
-            float endX = (calcX + calcWidth) / textureWidth;
-            float endY = (calcY + calcHeight) / textureHeight;
+            float startX = calcX / (float)textureWidth;
+            float startY = calcY / (float)textureHeight;
+            float endX = (calcX + calcWidth) / (float)textureWidth;
+            float endY = (calcY + calcHeight) / (float)textureHeight;
 
             // texture region is a struct which is allocated on the stack
             return new TextureRegion(startX, startY, endX, endY);
