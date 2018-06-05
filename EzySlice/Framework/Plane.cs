@@ -87,7 +87,7 @@ namespace EzySlice {
 				return SideOfPlane.UP;
 			}
 
-            if (result < float.Epsilon) {
+            if (result < -float.Epsilon) {
 				return SideOfPlane.DOWN;
 			}
 
