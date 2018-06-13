@@ -155,8 +155,6 @@ namespace EzySlice {
 			// ensure List does not dynamically grow, performing copy ops each time!
 			tri = new List<Triangle>(triCount / 3);
 
-			float maxDiv = Mathf.Max(maxDivX, maxDivY);
-
 			float width = maxDivX - minDivX;
 			float height = maxDivY - minDivY;
 
