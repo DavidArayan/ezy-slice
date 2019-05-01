@@ -1,12 +1,12 @@
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 namespace EzySlice {
     /**
      * Define Extension methods for easy access to slicer functionality
      */
     public static class SlicerExtensions {
-        
+
         /**
          * SlicedHull Return functions and appropriate overrides!
          */

@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -73,11 +73,10 @@ namespace EzySlice {
          * Texture.getTextureRegion() for function details.
          */
         public static TextureRegion GetTextureRegion(this Material mat,
-                                                     int pixX,
-                                                     int pixY,
-                                                     int pixWidth,
-                                                     int pixHeight)
-        {
+            int pixX,
+            int pixY,
+            int pixWidth,
+            int pixHeight) {
             return mat.mainTexture.GetTextureRegion(pixX, pixY, pixWidth, pixHeight);
         }
 
@@ -89,12 +88,11 @@ namespace EzySlice {
          * The texture region will automatically be calculated to ensure that it
          * will fit inside the provided texture. 
          */
-        public static TextureRegion GetTextureRegion(this Texture tex, 
-                                                     int pixX, 
-                                                     int pixY, 
-                                                     int pixWidth, 
-                                                     int pixHeight) 
-        {
+        public static TextureRegion GetTextureRegion(this Texture tex,
+            int pixX,
+            int pixY,
+            int pixWidth,
+            int pixHeight) {
             int textureWidth = tex.width;
             int textureHeight = tex.height;
 
@@ -105,10 +103,10 @@ namespace EzySlice {
             int calcX = Mathf.Min(Mathf.Abs(pixX), textureWidth);
             int calcY = Mathf.Min(Mathf.Abs(pixY), textureHeight);
 
-            float startX = calcX / (float)textureWidth;
-            float startY = calcY / (float)textureHeight;
-            float endX = (calcX + calcWidth) / (float)textureWidth;
-            float endY = (calcY + calcHeight) / (float)textureHeight;
+            float startX = calcX / (float) textureWidth;
+            float startY = calcY / (float) textureHeight;
+            float endX = (calcX + calcWidth) / (float) textureWidth;
+            float endY = (calcY + calcHeight) / (float) textureHeight;
 
             // texture region is a struct which is allocated on the stack
             return new TextureRegion(startX, startY, endX, endY);
