@@ -2,6 +2,7 @@
   <img src="Graphics/icon.png?raw=true" alt="EzySlice Logo" width="600">
 </h3>
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/76175609cae14f4b93feef579c630324)](https://app.codacy.com/app/DavidArayan/ezy-slice?utm_source=github.com&utm_medium=referral&utm_content=DavidArayan/ezy-slice&utm_campaign=Badge_Grade_Dashboard)
 [![Twitter: @DavidArayan](https://img.shields.io/badge/contact-DavidArayan-blue.svg?style=flat)](https://twitter.com/DavidArayan)
 [![Join the chat at https://gitter.im/ezyframeworks/ezyslice](https://img.shields.io/badge/chat-gitter/ezyslice-green.svg?style=flat)](https://gitter.im/ezyframeworks/ezyslice)
 [![License](https://img.shields.io/badge/license-MIT-orange.svg?style=flat)](LICENSE)
