@@ -9,6 +9,23 @@ namespace EzySlice {
      */
     public sealed class Slicer {
 
+        internal struct SlicedMeshDetails
+        {
+            public List<Vector3> crossHull;
+            public SlicedSubmesh[] slices; 
+        };
+
+        internal struct MeshDetails
+        {
+            public bool valid;
+            public MeshFilter filter;
+            public MeshRenderer renderer;
+            public Material[] materials;
+            public Mesh mesh;
+            public int submeshCount;
+            public int crossIndex;
+        };
+
         /**
          * An internal class for storing internal submesh values
          */
@@ -66,62 +83,63 @@ namespace EzySlice {
          * See -> Slice(Mesh, Plane) for more info
          */
         public static SlicedHull Slice(GameObject obj, Plane pl, TextureRegion crossRegion, Material crossMaterial) {
-            MeshFilter filter = obj.GetComponent<MeshFilter>();
 
-            // cannot continue without a proper filter
-            if (filter == null) {
-                Debug.LogWarning("EzySlice::Slice -> Provided GameObject must have a MeshFilter Component.");
+            MeshDetails md = GetMeshDetails(obj);
 
+            if (!md.valid)
+            {
                 return null;
             }
-
-            MeshRenderer renderer = obj.GetComponent<MeshRenderer>();
-
-            // cannot continue without a proper renderer
-            if (renderer == null) {
-                Debug.LogWarning("EzySlice::Slice -> Provided GameObject must have a MeshRenderer Component.");
-
-                return null;
-            }
-
-            Material[] materials = renderer.sharedMaterials;
-
-            Mesh mesh = filter.sharedMesh;
-
-            // cannot slice a mesh that doesn't exist
-            if (mesh == null) {
-                Debug.LogWarning("EzySlice::Slice -> Provided GameObject must have a Mesh that is not NULL.");
-
-                return null;
-            }
-
-            int submeshCount = mesh.subMeshCount;
-
-            // to make things straightforward, exit without slicing if the materials and mesh
-            // array don't match. This shouldn't happen anyway
-            if (materials.Length != submeshCount) {
-                Debug.LogWarning("EzySlice::Slice -> Provided Material array must match the length of submeshes.");
-
-                return null;
-            }
-
-            // we need to find the index of the material for the cross section.
+            
+            // crossIndex - we need to find the index of the material for the cross section.
             // default to the end of the array
-            int crossIndex = materials.Length;
-
             // for cases where the sliced material is null, we will append the cross section to the end
             // of the submesh array, this is because the application may want to set/change the material
             // after slicing has occured, so we don't assume anything
             if (crossMaterial != null) {
-                for (int i = 0; i < crossIndex; i++) {
-                    if (materials[i] == crossMaterial) {
-                        crossIndex = i;
+                for (int i = 0; i < md.crossIndex; i++) {
+                    if (md.materials[i] == crossMaterial) {
+                        md.crossIndex = i;
                         break;
                     }
                 }
             }
 
-            return Slice(mesh, pl, crossRegion, crossIndex);
+            return Slice(md.mesh, pl, crossRegion, md.crossIndex);
+        }
+
+
+        // Helper function for edgeloop functionality
+        public static List<Vector3> EdgeLoop(GameObject obj, Plane pl) {
+ 
+            MeshDetails md = GetMeshDetails(obj);
+
+            if (!md.valid)
+            {
+                return null;
+            }
+
+            return EdgeLoop(md.mesh, pl, md.crossIndex);
+        }
+
+        private static List<Vector3> EdgeLoop(Mesh sharedMesh, Plane pl, int crossIndex) {
+           if (sharedMesh == null) {
+                return null;
+            }
+
+            SlicedMeshDetails sliceDetails = SliceMesh(sharedMesh, pl);
+            
+            // check if slicing actually occured
+            for (int i = 0; i < sliceDetails.slices.Length; i++) {
+                // check if at least one of the submeshes was sliced. If so, stop checking
+                // because we need to go through the generation step
+                if (sliceDetails.slices[i] != null && sliceDetails.slices[i].isValid) {
+                    return sliceDetails.crossHull;
+                }
+            }
+
+            // no slicing occured, just return null to signify
+            return null;
         }
 
         /**
@@ -137,6 +155,27 @@ namespace EzySlice {
                 return null;
             }
 
+            SlicedMeshDetails sliceDetails = SliceMesh(sharedMesh, pl);
+
+            // check if slicing actually occured
+            for (int i = 0; i < sliceDetails.slices.Length; i++) {
+                // check if at least one of the submeshes was sliced. If so, stop checking
+                // because we need to go through the generation step
+                if (sliceDetails.slices[i] != null && sliceDetails.slices[i].isValid) {
+                    return CreateFrom(sliceDetails.slices, CreateFrom(sliceDetails.crossHull, pl.normal, region), crossIndex);
+                }
+            }
+
+            // no slicing occured, just return null to signify
+            return null;
+        }
+
+        /**
+         * Slice the mesh, and return sliced mesh details
+         **/
+        private static SlicedMeshDetails SliceMesh(Mesh sharedMesh, Plane pl) {
+
+            SlicedMeshDetails details = new SlicedMeshDetails();
             Vector3[] verts = sharedMesh.vertices;
             Vector2[] uv = sharedMesh.uv;
             Vector3[] norm = sharedMesh.normals;
@@ -222,17 +261,77 @@ namespace EzySlice {
                 slices[submesh] = mesh;
             }
 
-            // check if slicing actually occured
-            for (int i = 0; i < slices.Length; i++) {
-                // check if at least one of the submeshes was sliced. If so, stop checking
-                // because we need to go through the generation step
-                if (slices[i] != null && slices[i].isValid) {
-                    return CreateFrom(slices, CreateFrom(crossHull, pl.normal, region), crossIndex);
-                }
+            details.slices = slices;
+            details.crossHull = crossHull;
+            return details;
+        }
+
+        private static bool IsGameObjectOk(GameObject obj)
+        {
+            MeshFilter filter = obj.GetComponent<MeshFilter>();
+
+            // cannot continue without a proper filter
+            if (filter == null) {
+                Debug.LogWarning("EzySlice::Slice -> Provided GameObject must have a MeshFilter Component.");
+
+                return false;
             }
 
-            // no slicing occured, just return null to signify
-            return null;
+            MeshRenderer renderer = obj.GetComponent<MeshRenderer>();
+
+            // cannot continue without a proper renderer
+            if (renderer == null) {
+                Debug.LogWarning("EzySlice::Slice -> Provided GameObject must have a MeshRenderer Component.");
+
+                return false;
+            }
+
+            Material[] materials = renderer.sharedMaterials;
+
+            Mesh mesh = filter.sharedMesh;
+
+            // cannot slice a mesh that doesn't exist
+            if (mesh == null) {
+                Debug.LogWarning("EzySlice::Slice -> Provided GameObject must have a Mesh that is not NULL.");
+
+                return false;
+            }
+
+            int submeshCount = mesh.subMeshCount;
+
+            // to make things straightforward, exit without slicing if the materials and mesh
+            // array don't match. This shouldn't happen anyway
+            if (materials.Length != submeshCount) {
+                Debug.LogWarning("EzySlice::Slice -> Provided Material array must match the length of submeshes.");
+
+                return false;
+            }
+
+            return true;
+        }
+
+        /**
+         * Return mesh details or null if the supplied gameobject cannot be processed.
+         */
+        private static MeshDetails GetMeshDetails(GameObject obj)
+        {
+            MeshDetails md = new MeshDetails();
+
+            if (!IsGameObjectOk(obj))
+            {
+                md.valid = false;
+                return md;
+            }
+
+            md.filter = obj.GetComponent<MeshFilter>();
+            md.renderer =  obj.GetComponent<MeshRenderer>();
+            md.materials = md.renderer.sharedMaterials;
+            md.mesh = md.filter.sharedMesh;
+            md.submeshCount = md.mesh.subMeshCount;
+            md.crossIndex = md.materials.Length;
+            md.valid = true;
+
+            return md;
         }
 
         /**
