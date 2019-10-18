@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,13 +10,18 @@ namespace EzySlice {
      */
     public sealed class Slicer {
 
-        internal struct SlicedMeshDetails
+        internal struct SlicedMeshDetails : IEquatable<SlicedMeshDetails>
         {
             public List<Vector3> crossHull;
             public SlicedSubmesh[] slices; 
+
+            public bool Equals(SlicedMeshDetails other)
+            {
+                throw new NotImplementedException();
+            }
         };
 
-        internal struct MeshDetails
+        internal struct MeshDetails : IEquatable<MeshDetails>
         {
             public bool valid;
             public MeshFilter filter;
@@ -24,6 +30,11 @@ namespace EzySlice {
             public Mesh mesh;
             public int submeshCount;
             public int crossIndex;
+
+            public bool Equals(MeshDetails other)
+            {
+                throw new NotImplementedException();
+            }
         };
 
         /**
@@ -119,10 +130,10 @@ namespace EzySlice {
                 return null;
             }
 
-            return EdgeLoop(md.mesh, pl, md.crossIndex);
+            return EdgeLoop(md.mesh, pl);
         }
 
-        private static List<Vector3> EdgeLoop(Mesh sharedMesh, Plane pl, int crossIndex) {
+        private static List<Vector3> EdgeLoop(Mesh sharedMesh, Plane pl) {
            if (sharedMesh == null) {
                 return null;
             }
