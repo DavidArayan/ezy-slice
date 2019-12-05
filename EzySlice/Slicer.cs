@@ -208,7 +208,27 @@ namespace EzySlice {
                             crossHull.Add(result.intersectionPoints[i]);
                         }
                     } else {
-                        SideOfPlane side = pl.SideOf(verts[i0]);
+                        SideOfPlane sa = pl.SideOf(verts[i0]);
+                        SideOfPlane sb = pl.SideOf(verts[i1]);
+                        SideOfPlane sc = pl.SideOf(verts[i2]);
+
+                        SideOfPlane side = SideOfPlane.ON;
+                        if (sa != SideOfPlane.ON)
+                        {
+                            side = sa;
+                        }
+                        
+                        if (sb != SideOfPlane.ON)
+                        {
+                            Debug.Assert(side == SideOfPlane.ON || side == sb);
+                            side = sb;
+                        }
+                        
+                        if (sc != SideOfPlane.ON)
+                        {
+                            Debug.Assert(side == SideOfPlane.ON || side == sc);
+                            side = sc;
+                        }
 
                         if (side == SideOfPlane.UP || side == SideOfPlane.ON) {
                             mesh.upperHull.Add(newTri);

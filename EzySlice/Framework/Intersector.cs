@@ -17,6 +17,8 @@ namespace EzySlice {
             return Intersector.Intersect(pl, ln.positionA, ln.positionB, out q);
         }
 
+        
+        public const float Epsilon = 0.0001f;
         /**
          * Perform an intersection between Plane and Line made up of points a and b. Intersection
          * point will be stored in reference q. Function returns true if intersection has been
@@ -29,7 +31,7 @@ namespace EzySlice {
             float t = (pl.dist - Vector3.Dot(normal, a)) / Vector3.Dot(normal, ab);
 
             // need to be careful and compensate for floating errors
-            if (t >= -float.Epsilon && t <= (1 + float.Epsilon)) {
+            if (t >= -Epsilon && t <= (1 + Epsilon)) {
                 q = a + t * ab;
 
                 return true;
@@ -82,6 +84,13 @@ namespace EzySlice {
             else if ((sa == SideOfPlane.ON && sa == sb) ||
                 (sa == SideOfPlane.ON && sa == sc) ||
                 (sb == SideOfPlane.ON && sb == sc)) {
+                return;
+            }
+            
+            // detect cases where one point is on the plane and the other two are on the same side
+            else if ((sa == SideOfPlane.ON && sb != SideOfPlane.ON && sb == sc) ||
+                     (sb == SideOfPlane.ON && sa != SideOfPlane.ON && sa == sc) ||
+                     (sc == SideOfPlane.ON && sa != SideOfPlane.ON && sa == sb)) {
                 return;
             }
 
