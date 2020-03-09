@@ -50,6 +50,17 @@ namespace EzySlice {
             trans_ref = null;
 #endif
         }
+        
+        public Plane(Vector3 a, Vector3 b, Vector3 c)
+        {
+            m_normal = Vector3.Normalize(Vector3.Cross(b - a, c - a));
+            m_dist = -Vector3.Dot(Normal, a);
+            
+            // this is for editor debugging only!
+#if UNITY_EDITOR
+            trans_ref = null;
+#endif
+        }
 
         public void Compute(Vector3 pos, Vector3 norm) {
             this.m_normal = norm;
