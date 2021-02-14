@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace EzySlice {
@@ -6,7 +7,6 @@ namespace EzySlice {
      * Define Extension methods for easy access to slicer functionality
      */
     public static class SlicerExtensions {
-
         /**
          * SlicedHull Return functions and appropriate overrides!
          */
@@ -48,11 +48,12 @@ namespace EzySlice {
             return SliceInstantiate(obj, position, direction, null);
         }
 
-        public static GameObject[] SliceInstantiate(this GameObject obj, Vector3 position, Vector3 direction, Material crossSectionMat) {
+        public static GameObject[] SliceInstantiate(this GameObject obj, Vector3 position, Vector3 direction, Material crossSectionMat) {          
             return SliceInstantiate(obj, position, direction, new TextureRegion(0.0f, 0.0f, 1.0f, 1.0f), crossSectionMat);
         }
 
         public static GameObject[] SliceInstantiate(this GameObject obj, Vector3 position, Vector3 direction, TextureRegion cuttingRegion, Material crossSectionMaterial = null) {
+     
             EzySlice.Plane cuttingPlane = new EzySlice.Plane();
 
             Matrix4x4 mat = obj.transform.worldToLocalMatrix;
@@ -90,9 +91,10 @@ namespace EzySlice {
             if (lowerHull != null) {
                 return new GameObject[] { lowerHull };
             }
-
+            
             // nothing to return, so return nothing!
             return null;
+            
         }
     }
 }
