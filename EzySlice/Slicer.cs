@@ -23,7 +23,7 @@ namespace EzySlice {
             public bool hasUV {
                 get {
                     // what is this abomination??
-                    return upperHull.Count > 0 ? upperHull[0].hasUV : lowerHull.Count > 0 ? lowerHull[0].hasUV : false;
+                    return upperHull.Count > 0 ? upperHull[0].hasUV : lowerHull.Count > 0 && lowerHull[0].hasUV;
                 }
             }
 
@@ -34,7 +34,7 @@ namespace EzySlice {
             public bool hasNormal {
                 get {
                     // what is this abomination??
-                    return upperHull.Count > 0 ? upperHull[0].hasNormal : lowerHull.Count > 0 ? lowerHull[0].hasNormal : false;
+                    return upperHull.Count > 0 ? upperHull[0].hasNormal : lowerHull.Count > 0 && lowerHull[0].hasNormal;
                 }
             }
 
@@ -45,7 +45,7 @@ namespace EzySlice {
             public bool hasTangent {
                 get {
                     // what is this abomination??
-                    return upperHull.Count > 0 ? upperHull[0].hasTangent : lowerHull.Count > 0 ? lowerHull[0].hasTangent : false;
+                    return upperHull.Count > 0 ? upperHull[0].hasTangent : lowerHull.Count > 0 && lowerHull[0].hasTangent;
                 }
             }
 
@@ -66,19 +66,17 @@ namespace EzySlice {
          * See -> Slice(Mesh, Plane) for more info
          */
         public static SlicedHull Slice(GameObject obj, Plane pl, TextureRegion crossRegion, Material crossMaterial) {
-            MeshFilter filter = obj.GetComponent<MeshFilter>();
-
+            
             // cannot continue without a proper filter
-            if (filter == null) {
+            if (!obj.TryGetComponent<MeshFilter>(out var filter)) {
                 Debug.LogWarning("EzySlice::Slice -> Provided GameObject must have a MeshFilter Component.");
 
                 return null;
             }
 
-            MeshRenderer renderer = obj.GetComponent<MeshRenderer>();
-
+            
             // cannot continue without a proper renderer
-            if (renderer == null) {
+            if (!obj.TryGetComponent<MeshRenderer>(out var renderer)) {
                 Debug.LogWarning("EzySlice::Slice -> Provided GameObject must have a MeshRenderer Component.");
 
                 return null;
@@ -477,13 +475,7 @@ namespace EzySlice {
          * points and a plane normal. Intersection Points do not have to be in order.
          */
         private static List<Triangle> CreateFrom(List<Vector3> intPoints, Vector3 planeNormal, TextureRegion region) {
-            List<Triangle> tris;
-
-            if (Triangulator.MonotoneChain(intPoints, planeNormal, out tris, region)) {
-                return tris;
-            }
-
-            return null;
+            return Triangulator.MonotoneChain(intPoints, planeNormal, out List<Triangle> tris, region) ? tris : null;
         }
     }
 }
