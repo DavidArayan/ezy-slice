@@ -23,6 +23,7 @@ namespace EzySlice {
 
         public GameObject CreateUpperHull(GameObject original, Material crossSectionMat) {
             GameObject newObject = CreateUpperHull();
+            newObject.transform.parent = original.transform.parent;
 
             if (newObject != null) {
                 newObject.transform.localPosition = original.transform.localPosition;
@@ -62,6 +63,7 @@ namespace EzySlice {
 
         public GameObject CreateLowerHull(GameObject original, Material crossSectionMat) {
             GameObject newObject = CreateLowerHull();
+            newObject.transform.parent = original.transform.parent;
 
             if (newObject != null) {
                 newObject.transform.localPosition = original.transform.localPosition;
